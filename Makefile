@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -16,6 +16,9 @@ help:
 	@echo "  make smoke-api     Run API smoke test against a running backend"
 	@echo "  make e2e-smoke     Run minimal Playwright smoke test with local servers"
 	@echo "  make server-preflight HOST=<ssh-target> Run read-only server discovery"
+	@echo "  make package-release Build backend/frontend release artifact"
+	@echo "  make deploy-dev HOST=<ssh-target> DRY_RUN=true|false Run opt-in dev deploy wrapper"
+	@echo "  make deploy-dev-dry-run HOST=<ssh-target> Run dev deploy wrapper in dry-run mode"
 	@echo "  make backend-dev   Run the example Go backend"
 	@echo "  make frontend-dev  Run the example frontend dev server"
 	@echo "  make release-check Run doc-check, lint, test, and frontend build"
@@ -105,6 +108,24 @@ server-preflight:
 		exit 2; \
 	fi; \
 	./scripts/server-preflight.sh "$$HOST"
+
+package-release:
+	@./scripts/package-release.sh
+
+deploy-dev:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make deploy-dev HOST=cn.ant DRY_RUN=true DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		echo "Actual deploy requires explicit DRY_RUN=false."; \
+		exit 2; \
+	fi; \
+	./scripts/deploy-dev.sh
+
+deploy-dev-dry-run:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		exit 2; \
+	fi; \
+	DRY_RUN=true ./scripts/deploy-dev.sh
 
 backend-dev:
 	@cd backend && go run ./cmd/server

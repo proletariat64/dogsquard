@@ -74,3 +74,11 @@ Do not modify server configuration during topology discovery.
 Do not restart services during topology discovery.
 
 Do not commit raw output if it includes sensitive paths, private hostnames, or service details.
+
+## Phase 6B-1 Candidate Note
+
+`cn.ant` may be safer for early isolated dry-run or manual deploy validation because the standard preflight did not detect Docker, Docker Compose, nginx, Caddy, Traefik, or public web ports.
+
+This does not prove `cn.ant` is the final dev host.
+
+Domain routing remains unconfirmed, so Phase 6B-1 should use only an isolated deploy root and must not assume public HTTPS access.

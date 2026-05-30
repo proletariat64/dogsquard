@@ -45,3 +45,8 @@
 - cn.ant topology notes.
 - ADR protecting existing multica routing.
 - Server preflight runbook.
+- Release packaging script.
+- Remote deploy script with dry-run support.
+- Local dev deploy wrapper.
+- Makefile package/deploy targets.
+- Dev deployment runbook and test plan updates.

@@ -23,7 +23,7 @@ Phase 6B-0 is preflight only. It must not deploy, restart services, modify confi
 
 Run server preflight before choosing the Dogsquard dev host, route, deploy path, or artifact activation strategy.
 
-Run it again when server topology changes or before implementing Phase 6B-1 deployment scripts.
+Run it again when server topology changes or before using Phase 6B-1 deployment scripts on a target host.
 
 ## Commands
 
@@ -160,3 +160,12 @@ After safe topology facts are known, choose one Phase 6B-1 implementation path:
 - separate host/port for early testing
 
 Only then should deployment scripts and workflow implementation begin.
+
+For Phase 6B-1, run preflight before `make deploy-dev-dry-run` and choose a deploy root that is isolated from existing applications:
+
+```bash
+make server-preflight HOST=cn.ant
+make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Use `us.hermes` only after confirming the deploy root does not overlap multica paths or public `/` and `/api` routing.

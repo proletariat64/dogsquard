@@ -155,3 +155,20 @@ Future `us.hermes` runtime activation requires an explicit route strategy that p
 - existing multica containers
 - existing reverse proxy configuration
 - existing SSL configuration
+
+## Phase 6B-4 Runtime Hardening Warning
+
+`us.hermes` remains protected during Phase 6B-4.
+
+Allowed actions:
+
+- runtime status
+- runtime diagnose
+
+Blocked by default:
+
+- runtime start
+- runtime restart
+- runtime rollback
+
+No route strategy exists yet for Dogsquard on `us.hermes`.

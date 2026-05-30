@@ -365,6 +365,76 @@ Phase 6B-3 still does not add:
 - GitHub Actions deploy workflow
 - production deploy
 
+## Phase 6B-4 Runtime Hardening
+
+Phase 6B-4 keeps the same user-level runtime model and hardens it for repeated manual use.
+
+Stale pid behavior:
+
+- `status` reports stale pid files clearly.
+- `start` removes stale Dogsquard pid files before starting.
+- `stop` removes stale Dogsquard pid files without failing.
+- scripts only manage pid files under `$DEPLOY_ROOT/shared/run/`.
+
+Port occupied behavior:
+
+- `start` checks backend and frontend ports before launching processes.
+- if a port is owned by the matching Dogsquard pid file, start is idempotent.
+- if a port is owned by an unknown process, start fails with a clear diagnostic.
+- diagnostics use `ss` or `lsof` when available and do not require `sudo`.
+
+Logs:
+
+```bash
+make runtime-logs HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-logs HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev COMPONENT=backend
+make runtime-logs HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev COMPONENT=frontend
+```
+
+Diagnostics:
+
+```bash
+make runtime-diagnose HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+`diagnose` reports:
+
+- deploy root
+- current symlink target
+- release layout summary
+- pid file status
+- backend and frontend port status
+- recent log excerpts
+- health check result when `curl` exists
+
+Restart:
+
+```bash
+make runtime-restart HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Restart stops only Dogsquard pid-file processes and then starts from the current release.
+
+Rollback:
+
+```bash
+make rollback-dev HOST=cn.ant TARGET_RELEASE=<release-id> DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Rollback only switches the `current` symlink under `DEPLOY_ROOT`.
+
+Rollback does not restart runtime unless explicitly requested with `RESTART_AFTER_ROLLBACK=true`.
+
+`us.hermes` start, restart, and rollback remain blocked by default.
+
+Phase 6B-4 still does not add:
+
+- public URL exposure
+- reverse proxy routing
+- systemd or service lifecycle
+- GitHub Actions deploy workflow
+- production deploy
+
 ## Future GitHub Actions Flow
 
 The Phase 6B workflow should:
@@ -480,6 +550,27 @@ Phase 6B-3 adds:
 - localhost-only runtime validation on `cn.ant`
 
 Phase 6B-3 still does not add:
+
+- public URL exposure
+- reverse proxy configuration
+- systemd service
+- GitHub Actions deploy workflow
+- runtime activation on `us.hermes`
+- Docker or Docker Compose for Dogsquard
+- production deployment
+
+## Phase 6B-4 Boundary
+
+Phase 6B-4 adds:
+
+- stale pid hardening
+- port occupied diagnostics
+- runtime logs action
+- runtime diagnose action
+- explicit rollback helper
+- Makefile runtime hardening targets
+
+Phase 6B-4 still does not add:
 
 - public URL exposure
 - reverse proxy configuration

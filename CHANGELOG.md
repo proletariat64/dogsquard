@@ -59,3 +59,9 @@
 - Makefile runtime targets.
 - cn.ant runtime validation notes.
 - Dev deployment runbook and test plan updates for Phase 6B-3.
+- Runtime stale PID hardening.
+- Runtime port diagnostics.
+- Runtime logs and diagnose commands.
+- Runtime restart validation.
+- Runtime rollback helper.
+- Makefile runtime hardening targets.

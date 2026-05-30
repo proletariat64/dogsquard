@@ -157,6 +157,40 @@ Issue found and fixed:
 
 No public URL was exposed, no reverse proxy was changed, and no system-wide service was added.
 
+## Phase 6B-4 Runtime Hardening Validation Results
+
+Phase 6B-4 validated runtime hardening on `cn.ant`.
+
+Validated successfully:
+
+- `make deploy-dev HOST=cn.ant DRY_RUN=false DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-start HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- idempotent second `runtime-start`
+- `make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-health HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-logs HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-diagnose HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-restart HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- health after restart
+- `make runtime-stop HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- stopped status after stop
+- stale backend pid file reporting and cleanup
+- unknown frontend port occupant diagnostic
+- explicit rollback to a previous release
+- explicit rollback back to the latest release
+- `make runtime-start HOST=us.hermes DEPLOY_ROOT=~/apps/dogsquard-dev` is blocked by default
+
+Sanitized result:
+
+- runtime remained localhost-only
+- logs and diagnose did not require `sudo`
+- runtime scripts managed only Dogsquard pid-file processes
+- rollback changed only the `current` symlink under the isolated deploy root
+- no reverse proxy config was changed
+- no public URL was exposed
+
+An intermittent SSH connection close was observed during one transfer/log command and succeeded on retry. No script change was needed for that network-level event.
+
 ## Deployment Verification Checks
 
 After artifact upload, verify:
@@ -247,6 +281,17 @@ Phase 6B-3 runtime failure cases:
 - missing `python3` blocks frontend static serving
 - missing `curl` blocks health checks
 
+Phase 6B-4 runtime hardening cases:
+
+- stale pid file is reported by `status`
+- stale pid file is removed by `start`
+- second `start` is idempotent when Dogsquard owns the pid and port
+- unknown process on configured port blocks `start`
+- `logs` prints recent backend and frontend log lines
+- `diagnose` prints release, pid, port, log, and health context
+- rollback requires explicit `TARGET_RELEASE`
+- `us.hermes` start, restart, and rollback are blocked by default
+
 ## Future CI/CD Checks
 
 Later phases may add:
@@ -305,6 +350,21 @@ Later phases may add:
 - runtime stop stops only Dogsquard pid-file processes
 - stopped status reports backend and frontend stopped
 - `us.hermes` runtime start is blocked by default
+- no reverse proxy config is modified
+- no service is restarted
+- no Docker state is modified
+- no public route is exposed
+
+## Acceptance Criteria For Phase 6B-4
+
+- stale pid handling is clear and non-destructive
+- unknown occupied port blocks runtime start with diagnostics
+- idempotent start does not create duplicate Dogsquard processes
+- logs action works for runtime logs
+- diagnose action reports runtime state without secrets
+- restart works and health passes afterward
+- rollback helper switches only the isolated `current` symlink
+- `us.hermes` runtime start remains blocked by default
 - no reverse proxy config is modified
 - no service is restarted
 - no Docker state is modified

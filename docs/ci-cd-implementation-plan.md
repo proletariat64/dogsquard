@@ -1,3 +1,16 @@
+---
+title: "CI/CD Implementation Plan"
+doc_type: "design"
+status: "draft"
+owner: "devops-agent"
+source: "chat"
+created: "2026-05-30"
+updated: "2026-05-30"
+related_issue: "#1"
+related_pr: ""
+supersedes: ""
+---
+
 # CI/CD Implementation Plan
 
 ## Goal

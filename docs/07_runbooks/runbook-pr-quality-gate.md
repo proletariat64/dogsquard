@@ -15,9 +15,9 @@ supersedes: ""
 
 ## Purpose
 
-The PR Quality Gate is the first deterministic GitHub Actions quality gate for Dogsquard pull requests.
+The PR Quality Gate is the deterministic GitHub Actions quality gate for Dogsquard pull requests.
 
-It checks shell syntax, repository hygiene, local documentation rules, early template-safe lint/test commands, and a temporary Phase 4 scope guard.
+It checks shell syntax, repository hygiene, local documentation rules, template-safe lint/test/build commands, minimal Playwright smoke coverage, and a temporary scope guard.
 
 ## Workflow Jobs
 
@@ -46,6 +46,18 @@ make release-check
 
 This reuses the deterministic local foundation added in Phase 2.
 
+### Playwright Smoke
+
+Runs the minimal browser smoke path through:
+
+```bash
+make e2e-smoke
+```
+
+This verifies that the example app loads, shows the empty state, creates a valid task through the UI, and displays a missing-title validation error.
+
+It is not a full frontend regression suite.
+
 ### Temporary Scope Guard
 
 Lists changed files and fails when this PR changes out-of-phase paths:
@@ -54,15 +66,17 @@ Lists changed files and fails when this PR changes out-of-phase paths:
 - `docker-compose.yml`
 - `Dockerfile`
 - `.github/workflows/deploy.yml`
-- Playwright config or test paths
+- out-of-scope Playwright paths
 
-Backend and frontend paths are allowed starting in Phase 5B. This guard remains intentionally temporary for deployment, Docker runtime, and Playwright paths.
+Backend and frontend paths are allowed starting in Phase 5B. Minimal Playwright smoke files are allowed starting in Phase 5D. This guard remains intentionally temporary for deployment, Docker runtime, production release, and broader test paths.
 
 ### PR Quality Summary
 
 Runs after the required jobs and fails if any required job failed or was cancelled.
 
-This job is the intended future branch protection status check.
+This job should become the main required branch protection status check.
+
+Individual jobs explain what failed. The summary job gives branch protection one stable required check to enforce.
 
 ## Local Reproduction
 
@@ -74,6 +88,7 @@ make doc-guard
 make release-check
 git diff --check
 bash -n scripts/*.sh
+make e2e-smoke
 ```
 
 ## Fixing Doc-Check Failures
@@ -111,6 +126,14 @@ If the PR changed a forbidden path, either:
 
 Do not bypass the guard by renaming files to hide deployment, app code, or Playwright behavior.
 
+## Fixing PR Quality Summary Failures
+
+Open the failed individual job first.
+
+`PR Quality Summary` is intentionally a final aggregate. It should not be fixed directly unless the workflow summary dependency list is wrong.
+
+Fix the underlying job, push the correction, and let the summary rerun.
+
 ## Updating Or Relaxing The Scope Guard
 
 Update or remove the temporary scope guard when the Control Board moves into a phase where one of the guarded areas becomes allowed.
@@ -124,6 +147,6 @@ Any relaxation should be explicit in the PR summary and related issue.
 
 ## Future Branch Protection
 
-After the workflow is stable, repository settings should require `PR Quality Summary` before merging into `main`.
+Repository settings should require `PR Quality Summary` before merging into `main`.
 
-Branch protection is a GitHub repository setting and is not added by this Phase 4 workflow file.
+Branch protection is a manual GitHub repository setting in Phase 5E. It is not configured automatically by this repository yet.

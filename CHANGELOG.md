@@ -31,3 +31,7 @@
 - Local e2e smoke runner.
 - PR Quality Gate Playwright smoke job.
 - Updated runbook and test plan for Playwright smoke.
+- Branch protection runbook.
+- CI failure debugging runbook.
+- CI quality gates test plan.
+- PR Quality Gate documentation hardening.

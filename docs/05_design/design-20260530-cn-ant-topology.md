@@ -147,3 +147,17 @@ Validated hardening:
 No public route is configured yet.
 
 No reverse proxy integration is configured yet.
+
+## Phase 6C-1 Dev Workflow Design Note
+
+`cn.ant` is the preferred first GitHub Actions dev deploy target.
+
+The future workflow should deploy only under the configured development deploy root, currently expected to be:
+
+```text
+~/apps/dogsquard-dev
+```
+
+or the configured `DEV_DEPLOY_ROOT`.
+
+This does not imply public routing or reverse proxy integration.

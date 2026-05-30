@@ -65,3 +65,8 @@
 - Runtime restart validation.
 - Runtime rollback helper.
 - Makefile runtime hardening targets.
+- Dev deploy workflow PRD.
+- Dev deploy workflow BDD scenarios.
+- Dev deploy workflow test plan.
+- GitHub dev deploy workflow runbook.
+- ADR for using GitHub Actions to deploy dev to cn.ant.

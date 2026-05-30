@@ -437,7 +437,15 @@ Phase 6B-4 still does not add:
 
 ## Future GitHub Actions Flow
 
-The Phase 6B workflow should:
+Phase 6C should automate `cn.ant` dev deploy through GitHub Actions after the Phase 6B scripts have been validated manually.
+
+The future workflow should reuse:
+
+- `scripts/package-release.sh`
+- `scripts/deploy-dev.sh`
+- `scripts/runtime-dev.sh`
+
+The future workflow should:
 
 - trigger from `main` after merge
 - run quality checks before deploying
@@ -449,6 +457,10 @@ The Phase 6B workflow should:
 - run health verification
 - run smoke verification
 - report failure without replacing a working release
+
+`us.hermes` remains protected and must not be the first automated dev deploy target.
+
+Production remains a future phase.
 
 ## Health Verification
 
@@ -576,6 +588,19 @@ Phase 6B-4 still does not add:
 - reverse proxy configuration
 - systemd service
 - GitHub Actions deploy workflow
+- runtime activation on `us.hermes`
+- Docker or Docker Compose for Dogsquard
+- production deployment
+
+## Phase 6C-1 Boundary
+
+Phase 6C-1 adds design only for the GitHub Actions dev deploy workflow.
+
+Phase 6C-1 still does not add:
+
+- GitHub Actions deploy workflow
+- public URL exposure
+- reverse proxy configuration
 - runtime activation on `us.hermes`
 - Docker or Docker Compose for Dogsquard
 - production deployment

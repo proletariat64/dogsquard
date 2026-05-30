@@ -172,3 +172,15 @@ Blocked by default:
 - runtime rollback
 
 No route strategy exists yet for Dogsquard on `us.hermes`.
+
+## Phase 6C-1 Dev Workflow Exclusion
+
+`us.hermes` is explicitly excluded from the Phase 6C dev deploy workflow design.
+
+Any future `us.hermes` activation requires a separate route strategy that protects:
+
+- `/`
+- `/api`
+- existing multica containers
+- existing reverse proxy configuration
+- existing SSL configuration

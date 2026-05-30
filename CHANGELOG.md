@@ -11,3 +11,6 @@
 - Pull request template.
 - Label source definition.
 - GitHub labels runbook.
+- PR Quality Gate workflow.
+- PR quality test plan.
+- PR quality runbook.

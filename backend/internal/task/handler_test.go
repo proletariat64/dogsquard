@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -23,6 +24,26 @@ func TestHealthz(t *testing.T) {
 	decodeResponse(t, rec, &body)
 	if body["status"] != "ok" {
 		t.Fatalf("status body = %q, want ok", body["status"])
+	}
+	assertJSONContentType(t, rec)
+}
+
+func TestListTasksEmpty(t *testing.T) {
+	handler := NewHandler(NewStore())
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/tasks", nil)
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("list status = %d, want %d", rec.Code, http.StatusOK)
+	}
+	assertJSONContentType(t, rec)
+
+	var tasks []Task
+	decodeResponse(t, rec, &tasks)
+	if len(tasks) != 0 {
+		t.Fatalf("task count = %d, want 0", len(tasks))
 	}
 }
 
@@ -98,11 +119,31 @@ func TestCreateTaskValidation(t *testing.T) {
 			}
 
 			var body map[string]string
-			decodeResponse(t, rec, &body)
-			if body["error"] == "" || body["message"] == "" {
-				t.Fatalf("error response missing fields: %#v", body)
+			decodeErrorResponse(t, rec, &body)
+			if body["code"] != "validation_error" || body["message"] == "" {
+				t.Fatalf("error response = %#v, want validation_error with message", body)
 			}
 		})
+	}
+}
+
+func TestCreateTaskInvalidJSON(t *testing.T) {
+	handler := NewHandler(NewStore())
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/tasks", strings.NewReader(`{"title":`))
+	req.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+	assertJSONContentType(t, rec)
+
+	var body map[string]string
+	decodeErrorResponse(t, rec, &body)
+	if body["code"] != "invalid_json" {
+		t.Fatalf("error code = %q, want invalid_json", body["code"])
 	}
 }
 
@@ -153,6 +194,12 @@ func TestUpdateTaskStatusAndValidation(t *testing.T) {
 	if bad.Code != http.StatusBadRequest {
 		t.Fatalf("invalid update status = %d, want %d", bad.Code, http.StatusBadRequest)
 	}
+
+	var body map[string]string
+	decodeErrorResponse(t, bad, &body)
+	if body["code"] != "validation_error" {
+		t.Fatalf("error code = %q, want validation_error", body["code"])
+	}
 }
 
 func TestMissingTaskReturnsNotFound(t *testing.T) {
@@ -164,12 +211,44 @@ func TestMissingTaskReturnsNotFound(t *testing.T) {
 	if update.Code != http.StatusNotFound {
 		t.Fatalf("missing update status = %d, want %d", update.Code, http.StatusNotFound)
 	}
+	var updateBody map[string]string
+	decodeErrorResponse(t, update, &updateBody)
+	if updateBody["code"] != "not_found" {
+		t.Fatalf("missing update code = %q, want not_found", updateBody["code"])
+	}
 
 	deleteRec := httptest.NewRecorder()
 	deleteReq := httptest.NewRequest(http.MethodDelete, "/api/tasks/missing", nil)
 	handler.ServeHTTP(deleteRec, deleteReq)
 	if deleteRec.Code != http.StatusNotFound {
 		t.Fatalf("missing delete status = %d, want %d", deleteRec.Code, http.StatusNotFound)
+	}
+	var deleteBody map[string]string
+	decodeErrorResponse(t, deleteRec, &deleteBody)
+	if deleteBody["code"] != "not_found" {
+		t.Fatalf("missing delete code = %q, want not_found", deleteBody["code"])
+	}
+}
+
+func TestUnsupportedMethodReturnsJSONError(t *testing.T) {
+	handler := NewHandler(NewStore())
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPut, "/api/tasks", nil)
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+	if rec.Header().Get("Allow") != "GET, POST" {
+		t.Fatalf("allow = %q, want GET, POST", rec.Header().Get("Allow"))
+	}
+	assertJSONContentType(t, rec)
+
+	var body map[string]string
+	decodeErrorResponse(t, rec, &body)
+	if body["code"] != "method_not_allowed" {
+		t.Fatalf("error code = %q, want method_not_allowed", body["code"])
 	}
 }
 
@@ -231,5 +310,23 @@ func decodeResponse(t *testing.T, rec *httptest.ResponseRecorder, target any) {
 
 	if err := json.NewDecoder(rec.Body).Decode(target); err != nil {
 		t.Fatalf("decode response: %v; body=%q", err, rec.Body.String())
+	}
+}
+
+func decodeErrorResponse(t *testing.T, rec *httptest.ResponseRecorder, target *map[string]string) {
+	t.Helper()
+
+	var envelope struct {
+		Error map[string]string `json:"error"`
+	}
+	decodeResponse(t, rec, &envelope)
+	*target = envelope.Error
+}
+
+func assertJSONContentType(t *testing.T, rec *httptest.ResponseRecorder) {
+	t.Helper()
+
+	if contentType := rec.Header().Get("Content-Type"); contentType != "application/json" {
+		t.Fatalf("content-type = %q, want application/json", contentType)
 	}
 }

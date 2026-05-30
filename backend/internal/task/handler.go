@@ -3,6 +3,7 @@ package task
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -106,7 +107,13 @@ func decodeJSON(r *http.Request, target any) error {
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	return decoder.Decode(target)
+	if err := decoder.Decode(target); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		return errors.New("request body must contain a single JSON value")
+	}
+	return nil
 }
 
 func writeInputError(w http.ResponseWriter, err error) {
@@ -125,8 +132,10 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 }
 
 func writeError(w http.ResponseWriter, status int, code string, message string) {
-	writeJSON(w, status, map[string]string{
-		"error":   code,
-		"message": message,
+	writeJSON(w, status, map[string]map[string]string{
+		"error": {
+			"code":    code,
+			"message": message,
+		},
 	})
 }

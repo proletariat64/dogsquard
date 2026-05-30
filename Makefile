@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -11,9 +11,12 @@ help:
 	@echo "  make doc-guard     Run Doc Watch Guard report"
 	@echo "  make watch-docs    Re-run doc checks in a loop"
 	@echo "  make agent-docs    Print a safe agent documentation review prompt"
+	@echo "  make backend-test  Run backend Go tests"
+	@echo "  make frontend-build Install frontend dependencies and build"
+	@echo "  make smoke-api     Run API smoke test against a running backend"
 	@echo "  make backend-dev   Run the example Go backend"
 	@echo "  make frontend-dev  Run the example frontend dev server"
-	@echo "  make release-check Run doc-check, lint, and test"
+	@echo "  make release-check Run doc-check, lint, test, and frontend build"
 
 test:
 	@set -euo pipefail; \
@@ -77,10 +80,23 @@ watch-docs:
 agent-docs:
 	@./scripts/agent-doc-review.sh
 
+backend-test:
+	@cd backend && go test ./...
+
+frontend-build:
+	@if [[ -d frontend && -f frontend/package.json ]]; then \
+		cd frontend && npm install && npm run build; \
+	else \
+		echo "No frontend/package.json found; skipping frontend build."; \
+	fi
+
+smoke-api:
+	@./scripts/smoke-api.sh
+
 backend-dev:
 	@cd backend && go run ./cmd/server
 
 frontend-dev:
 	@cd frontend && npm run dev
 
-release-check: doc-check lint test
+release-check: doc-check lint test frontend-build

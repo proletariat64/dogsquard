@@ -23,3 +23,7 @@
 - Example frontend skeleton.
 - Backend task API tests.
 - PR Quality Gate scope guard updated for Phase 5B.
+- API smoke script.
+- Backend API response hardening.
+- Frontend local API, error, empty, and loading state hardening.
+- Makefile smoke and frontend build targets.

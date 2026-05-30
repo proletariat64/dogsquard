@@ -120,6 +120,13 @@ textarea {
   min-height: 1.5rem;
 }
 
+.status-message {
+  color: #475467;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  min-height: 1.5rem;
+}
+
 .section-heading {
   align-items: center;
   display: flex;

@@ -14,11 +14,13 @@ type Task = {
 };
 
 type ErrorResponse = {
-  error: string;
-  message: string;
+  error?: {
+    code?: string;
+    message?: string;
+  };
 };
 
-const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8080';
+const apiBase = (import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8080').replace(/\/$/, '');
 
 const app = requiredElement<HTMLDivElement>('#app');
 
@@ -61,6 +63,7 @@ app.innerHTML = `
         <h2>Dashboard</h2>
         <span id="taskCount">0 tasks</span>
       </div>
+      <p class="status-message" id="taskStatus" role="status"></p>
       <div id="taskList"></div>
     </section>
   </section>
@@ -70,9 +73,11 @@ const taskForm = requiredElement<HTMLFormElement>('#taskForm');
 const taskList = requiredElement<HTMLDivElement>('#taskList');
 const formError = requiredElement<HTMLParagraphElement>('#formError');
 const taskCount = requiredElement<HTMLSpanElement>('#taskCount');
+const taskStatus = requiredElement<HTMLParagraphElement>('#taskStatus');
 const refreshTasks = requiredElement<HTMLButtonElement>('#refreshTasks');
 
 let tasks: Task[] = [];
+let isLoading = false;
 
 taskForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -100,16 +105,31 @@ refreshTasks.addEventListener('click', () => {
 });
 
 async function loadTasks(): Promise<void> {
+  isLoading = true;
+  renderTasks();
   try {
     tasks = await apiRequest<Task[]>('/api/tasks');
+    clearError();
+    taskStatus.textContent = '';
+    taskStatus.classList.remove('error');
     renderTasks();
   } catch (error) {
+    taskStatus.classList.add('error');
+    taskStatus.textContent = errorMessage(error);
     showError(error);
+  } finally {
+    isLoading = false;
+    renderTasks();
   }
 }
 
 function renderTasks(): void {
   taskCount.textContent = `${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}`;
+
+  if (isLoading) {
+    taskList.innerHTML = `<p class="empty">Loading tasks...</p>`;
+    return;
+  }
 
   if (tasks.length === 0) {
     taskList.innerHTML = `<p class="empty">No tasks yet. Create the first intake item.</p>`;
@@ -189,34 +209,51 @@ function statusOption(current: Status, value: Status, label: string): string {
 }
 
 async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${apiBase}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...init.headers,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...init.headers,
+      },
+    });
+  } catch {
+    throw new Error(`Cannot reach API at ${apiBase}`);
+  }
 
   if (response.status === 204) {
     return undefined as T;
   }
 
-  const data = (await response.json()) as T | ErrorResponse;
+  const data = (await readJSON(response)) as T | ErrorResponse;
 
   if (!response.ok) {
     const error = data as ErrorResponse;
-    throw new Error(error.message || 'Request failed');
+    throw new Error(error.error?.message || `Request failed with status ${response.status}`);
   }
 
   return data as T;
 }
 
 function showError(error: unknown): void {
-  formError.textContent = error instanceof Error ? error.message : 'Unexpected error';
+  formError.textContent = errorMessage(error);
 }
 
 function clearError(): void {
   formError.textContent = '';
+}
+
+async function readJSON(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(`API returned non-JSON response with status ${response.status}`);
+  }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unexpected error';
 }
 
 function escapeHTML(value: string): string {

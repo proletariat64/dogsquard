@@ -26,7 +26,7 @@ mkdir -p "${release_dir}/backend" "${release_dir}/frontend" "${release_dir}/scri
 echo "Building backend binary..."
 (
   cd backend
-  go build -trimpath -o "../${release_dir}/backend/${APP_NAME}-server" ./cmd/server
+  CGO_ENABLED=0 go build -trimpath -o "../${release_dir}/backend/${APP_NAME}-server" ./cmd/server
 )
 
 echo "Installing frontend dependencies and building frontend assets..."
@@ -45,6 +45,7 @@ git_sha=${GIT_SHA}
 build_time_utc=${BUILD_TIME_UTC}
 backend_binary=backend/${APP_NAME}-server
 frontend_dist=frontend/dist
+backend_cgo_enabled=false
 secrets_included=false
 note=no secrets, .git, node_modules, or local environment files are included
 EOF

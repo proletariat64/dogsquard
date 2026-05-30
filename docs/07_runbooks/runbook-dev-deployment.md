@@ -301,6 +301,70 @@ Phase 6B-2 does not validate:
 - GitHub Actions deploy workflow
 - production deploy
 
+## Phase 6B-3 Runtime Commands
+
+Phase 6B-3 adds user-level runtime management for the deployed artifact.
+
+It uses:
+
+- backend binary from `current/release/backend/dogsquard-server`
+- frontend static assets from `current/release/frontend/dist`
+- pid files under `$DEPLOY_ROOT/shared/run/`
+- logs under `$DEPLOY_ROOT/logs/`
+
+Default localhost-only endpoints:
+
+```text
+backend:  127.0.0.1:18080
+frontend: 127.0.0.1:14173
+```
+
+Start runtime on `cn.ant` only:
+
+```bash
+make runtime-start HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Check status:
+
+```bash
+make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Check health:
+
+```bash
+make runtime-health HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Stop runtime:
+
+```bash
+make runtime-stop HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Confirm stopped:
+
+```bash
+make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+`us.hermes` runtime start and restart are blocked by default:
+
+```bash
+make runtime-start HOST=us.hermes DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Do not set `ALLOW_US_HERMES_RUNTIME=true` in Phase 6B-3.
+
+Phase 6B-3 still does not add:
+
+- public URL exposure
+- reverse proxy routing
+- systemd or service lifecycle
+- GitHub Actions deploy workflow
+- production deploy
+
 ## Future GitHub Actions Flow
 
 The Phase 6B workflow should:
@@ -403,5 +467,24 @@ Phase 6B-1 still does not add:
 - public route exposure
 - reverse proxy configuration
 - service restart
+- Docker or Docker Compose for Dogsquard
+- production deployment
+
+## Phase 6B-3 Boundary
+
+Phase 6B-3 adds:
+
+- user-level remote runtime script
+- local runtime wrapper
+- Makefile runtime targets
+- localhost-only runtime validation on `cn.ant`
+
+Phase 6B-3 still does not add:
+
+- public URL exposure
+- reverse proxy configuration
+- systemd service
+- GitHub Actions deploy workflow
+- runtime activation on `us.hermes`
 - Docker or Docker Compose for Dogsquard
 - production deployment

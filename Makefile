@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -24,6 +24,9 @@ help:
 	@echo "  make runtime-stop HOST=<ssh-target> Stop remote Dogsquard runtime"
 	@echo "  make runtime-restart HOST=<ssh-target> Restart remote Dogsquard runtime"
 	@echo "  make runtime-health HOST=<ssh-target> Check remote Dogsquard runtime health"
+	@echo "  make runtime-logs HOST=<ssh-target> [COMPONENT=backend|frontend] Tail remote runtime logs"
+	@echo "  make runtime-diagnose HOST=<ssh-target> Run remote runtime diagnostics"
+	@echo "  make rollback-dev HOST=<ssh-target> TARGET_RELEASE=<id> Switch remote current symlink"
 	@echo "  make backend-dev   Run the example Go backend"
 	@echo "  make frontend-dev  Run the example frontend dev server"
 	@echo "  make release-check Run doc-check, lint, test, and frontend build"
@@ -166,6 +169,27 @@ runtime-health:
 		exit 2; \
 	fi; \
 	ACTION=health ./scripts/runtime-dev.sh
+
+runtime-logs:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make runtime-logs HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev [COMPONENT=backend|frontend]"; \
+		exit 2; \
+	fi; \
+	ACTION=logs ./scripts/runtime-dev.sh
+
+runtime-diagnose:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make runtime-diagnose HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		exit 2; \
+	fi; \
+	ACTION=diagnose ./scripts/runtime-dev.sh
+
+rollback-dev:
+	@if [[ -z "$${HOST:-}" || -z "$${TARGET_RELEASE:-}" ]]; then \
+		echo "Usage: make rollback-dev HOST=cn.ant TARGET_RELEASE=<release-id> DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		exit 2; \
+	fi; \
+	ACTION=rollback ./scripts/runtime-dev.sh
 
 backend-dev:
 	@cd backend && go run ./cmd/server

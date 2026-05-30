@@ -121,3 +121,29 @@ No public URL was exposed.
 No reverse proxy integration was added.
 
 No system-wide service was added.
+
+## Phase 6B-4 Runtime Hardening Summary
+
+`cn.ant` is validated for isolated Dogsquard dev runtime hardening.
+
+Runtime layout:
+
+- deploy root: `~/apps/dogsquard-dev`
+- pid files: `shared/run/`
+- logs: `logs/`
+- backend: localhost port `18080`
+- frontend: localhost port `14173`
+
+Validated hardening:
+
+- stale pid reporting and cleanup
+- idempotent start
+- occupied port diagnostics
+- runtime logs
+- runtime diagnose
+- restart and health after restart
+- explicit rollback helper
+
+No public route is configured yet.
+
+No reverse proxy integration is configured yet.

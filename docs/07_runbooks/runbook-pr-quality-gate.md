@@ -46,19 +46,17 @@ make release-check
 
 This reuses the deterministic local foundation added in Phase 2.
 
-### Temporary Phase 4 Scope Guard
+### Temporary Scope Guard
 
 Lists changed files and fails when this PR changes out-of-phase paths:
 
-- `backend/**`
-- `frontend/**`
 - `deploy/**`
 - `docker-compose.yml`
 - `Dockerfile`
 - `.github/workflows/deploy.yml`
 - Playwright config or test paths
 
-This is intentionally temporary. Later phases can remove or relax it when those areas enter scope.
+Backend and frontend paths are allowed starting in Phase 5B. This guard remains intentionally temporary for deployment, Docker runtime, and Playwright paths.
 
 ### PR Quality Summary
 
@@ -106,7 +104,7 @@ Fix the reported script and line number. Shell syntax checks do not execute scri
 
 Read the changed file list in the failed job.
 
-If the PR changed a forbidden Phase 4 path, either:
+If the PR changed a forbidden path, either:
 
 - remove that change from the PR, or
 - move it to the later phase where the path belongs
@@ -119,7 +117,6 @@ Update or remove the temporary scope guard when the Control Board moves into a p
 
 Examples:
 
-- Phase 5 may allow backend/frontend example app files.
 - A later testing phase may allow Playwright.
 - Deployment phases may allow Docker and deploy workflow files.
 

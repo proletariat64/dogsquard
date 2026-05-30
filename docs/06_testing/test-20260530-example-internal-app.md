@@ -32,6 +32,8 @@ Recommended order:
 
 ## Backend Unit Tests
 
+Phase 5B implements backend tests for validation, in-memory storage behavior, and handler behavior.
+
 Backend tests should cover:
 
 - required title validation
@@ -44,9 +46,11 @@ Backend tests should cover:
 
 ## API Behavior Tests
 
+Phase 5B implements API behavior tests for the current standard-library HTTP skeleton.
+
 API tests should cover:
 
-- `GET /health`
+- `GET /healthz`
 - `GET /api/tasks`
 - `POST /api/tasks`
 - `PATCH /api/tasks/{id}`
@@ -55,6 +59,8 @@ API tests should cover:
 - missing task behavior for update and delete
 
 ## Frontend Checks
+
+Phase 5B adds a lightweight Vite TypeScript frontend skeleton and validates it with `npm run build`.
 
 Frontend checks should cover:
 
@@ -65,7 +71,7 @@ Frontend checks should cover:
 - status update display
 - deleted task removal from table
 
-These checks should use the frontend tooling selected in the implementation phase. Phase 5A does not choose or install tooling.
+These checks use the frontend tooling selected in Phase 5B. Dedicated frontend tests may be added later.
 
 ## Playwright Smoke Tests Later
 
@@ -79,7 +85,7 @@ Initial smoke candidates:
 - update status
 - delete task
 
-Do not add Playwright in Phase 5A.
+Do not add Playwright in Phase 5B.
 
 ## Release-Check Expectations
 
@@ -102,6 +108,9 @@ make doc-guard
 make release-check
 git diff --check
 bash -n scripts/*.sh
+cd backend && go test ./...
+cd frontend && npm install
+cd frontend && npm run build
 ```
 
 ## PR Validation Expectations

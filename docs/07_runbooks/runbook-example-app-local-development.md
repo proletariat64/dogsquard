@@ -15,13 +15,11 @@ supersedes: ""
 
 ## Purpose
 
-This runbook describes the expected future local workflow for the Internal Task Intake example app.
-
-It is preparatory until Phase 5B implementation exists.
+This runbook describes the local workflow for the Internal Task Intake example app.
 
 ## Expected Future Local Workflow
 
-Expected workflow after implementation:
+Expected workflow:
 
 1. Review PRD, BDD, ADR, and test plan.
 2. Run local documentation checks.
@@ -32,33 +30,28 @@ Expected workflow after implementation:
 7. Run `make release-check`.
 8. Open a PR and let PR Quality Gate validate the branch.
 
-## Expected Backend Command
-
-The backend command will be finalized in Phase 5B.
-
-Expected shape:
+## Backend Commands
 
 ```bash
 cd backend
-go run ./...
+go test ./...
+go run ./cmd/server
 ```
 
-If the implementation chooses a more specific command, update this runbook in the same PR.
+The backend listens on `127.0.0.1:8080` unless `HTTP_ADDR` is set.
 
-## Expected Frontend Command
-
-The frontend command will be finalized in Phase 5B.
-
-Expected shape:
+## Frontend Commands
 
 ```bash
 cd frontend
+npm install
+npm run build
 npm run dev
 ```
 
-Do not hardcode frontend tooling before it is introduced.
+The frontend dev server expects the backend API at `http://127.0.0.1:8080` by default.
 
-## Expected Test Command
+## Test Commands
 
 Expected local test command:
 
@@ -73,7 +66,14 @@ cd backend
 go test ./...
 ```
 
-Frontend test commands depend on the selected frontend tooling and should be documented when introduced.
+Frontend build command:
+
+```bash
+cd frontend
+npm run build
+```
+
+No dedicated frontend test script is included in Phase 5B.
 
 ## Expected Release-Check Behavior
 
@@ -81,20 +81,22 @@ Frontend test commands depend on the selected frontend tooling and should be doc
 
 - run documentation checks
 - run backend lint and tests when Go files exist
-- run frontend lint and tests when `frontend/package.json` exists and scripts are available
-- pass in the early template state when app code is absent
+- run frontend lint and tests when scripts are available
+- pass with the Phase 5B skeleton
 
 ## Known Pending Items
 
-- Backend folder does not exist yet.
-- Frontend folder does not exist yet.
-- API routes are not implemented yet.
-- Frontend tooling is not selected yet.
+- Persistent storage is not implemented.
+- Authentication is not implemented.
 - Playwright is planned later.
 - Deployment is planned later.
 
-## Phase 5B Note
+## Root Commands
 
-Phase 5B should update this runbook when it adds actual backend and frontend commands.
-
-Until then, this file is a planning document and must not be treated as proof that the app already exists.
+```bash
+make test
+make lint
+make release-check
+make backend-dev
+make frontend-dev
+```

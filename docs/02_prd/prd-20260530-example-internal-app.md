@@ -78,7 +78,7 @@ The app lets the user create and manage small internal task or intake records.
 Expected endpoints:
 
 ```text
-GET    /health
+GET    /healthz
 GET    /api/tasks
 POST   /api/tasks
 PATCH  /api/tasks/{id}
@@ -87,7 +87,7 @@ DELETE /api/tasks/{id}
 
 Expected behavior:
 
-- `GET /health` returns service health as JSON.
+- `GET /healthz` returns service health as JSON.
 - `GET /api/tasks` returns all tasks.
 - `POST /api/tasks` creates a task when input is valid.
 - `PATCH /api/tasks/{id}` updates supported task fields.

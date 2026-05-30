@@ -15,34 +15,45 @@ supersedes: ""
 
 ## Objective
 
-Define the Phase 4 validation scope for the Dogsquard PR Quality Gate.
+Define the validation scope for the Dogsquard PR Quality Gate.
 
-The gate should provide deterministic checks for early template repository work without adding deployment, production release, self-hosted runners, backend/frontend app code, or Playwright.
+The gate should provide deterministic checks for repository work without adding deployment, production release, self-hosted runners, database, auth, or full Playwright regression.
 
 ## Checks Included
 
-The Phase 4 workflow includes:
+The current workflow includes:
 
 - shell syntax validation for `scripts/*.sh`
 - repository hygiene through `git diff --check`
 - local foundation commands through `make help`, `make doc-check`, `make doc-guard`, and `make release-check`
+- minimal Playwright smoke through `make e2e-smoke`
 - temporary scope guard for forbidden out-of-phase paths
 - final `PR Quality Summary` job that fails when a required job fails or is cancelled
 
-## Checks Excluded From Phase 4
+## Required For PR Merge
 
-Phase 4 does not include:
+The recommended required status check is:
 
-- backend app tests
-- frontend app tests
-- Playwright
+```text
+PR Quality Summary
+```
+
+The individual jobs are required through the summary job dependency chain.
+
+## Checks Excluded From The Current Gate
+
+The current gate does not include:
+
+- full Playwright regression
 - deployment
 - production release
 - self-hosted runner
+- database integration
+- authentication checks
 - external SaaS integrations
 - external LLM commands
 
-The existing `make release-check` can run backend or frontend checks later when those folders exist, but Phase 4 does not add those app areas.
+Backend tests and frontend build run through local commands now that those project areas exist.
 
 ## Local Validation
 
@@ -54,6 +65,7 @@ make doc-guard
 make release-check
 git diff --check
 bash -n scripts/*.sh
+make e2e-smoke
 ```
 
 Expected local result:
@@ -61,7 +73,9 @@ Expected local result:
 - documentation checks pass
 - shell scripts parse
 - whitespace check passes
-- lint and test steps skip cleanly while `backend/` and `frontend/` do not exist
+- backend tests pass
+- frontend build passes
+- minimal Playwright smoke passes
 
 ## PR Validation
 
@@ -72,27 +86,26 @@ GitHub Actions should run `PR Quality Gate` and report:
 - `Shell Check`
 - `Repository Hygiene`
 - `Local Foundation`
-- `Temporary Phase 4 Scope Guard`
+- `Playwright Smoke`
+- `Temporary Scope Guard`
 - `PR Quality Summary`
 
-The `PR Quality Summary` job is intended to become the future required status check after branch protection is configured.
+The `PR Quality Summary` job should be the required status check after branch protection is manually configured.
 
 ## Known Limitations
 
-- The scope guard is temporary and now allows backend/frontend changes for Phase 5B.
-- The workflow does not install Go or Node dependencies.
-- The workflow does not run Playwright.
+- The scope guard is temporary and now allows backend/frontend changes and minimal Playwright smoke files.
+- The workflow runs minimal Playwright smoke only, not full regression.
 - The workflow does not deploy.
 - The workflow does not validate label sync automation.
 - The workflow does not replace human review of product meaning.
+- Branch protection remains a manual repository setting in Phase 5E.
 
 ## Future Expansion Plan
 
 Later phases may add:
 
-- backend test setup when backend code exists
-- frontend test setup when frontend code exists
-- Playwright smoke checks
+- full Playwright regression
 - documentation gate refinements
 - branch protection requiring `PR Quality Summary`
 - deployment workflows for dev and production

@@ -92,19 +92,26 @@ Frontend checks should cover:
 
 These checks use the frontend tooling selected in Phase 5B. Dedicated frontend tests may be added later.
 
-## Playwright Smoke Tests Later
+## Playwright Smoke Tests
 
-Playwright smoke tests are planned for a later phase.
+Phase 5D introduces a minimal Playwright smoke test.
 
-Initial smoke candidates:
+The Phase 5D smoke test covers only:
 
 - app loads
 - create task through UI
-- task appears in table
-- update status
-- delete task
+- empty state is visible
+- validation error is visible when title is missing
 
-Do not add Playwright in Phase 5B or Phase 5C.
+The Phase 5D smoke test intentionally does not cover:
+
+- every CRUD path
+- status update behavior
+- task deletion behavior
+- full frontend regression
+- production deployment behavior
+
+Full Playwright regression remains a future phase.
 
 ## Release-Check Expectations
 
@@ -117,6 +124,7 @@ Expected behavior after implementation:
 - frontend tests run when frontend tooling exists
 - frontend build runs when the frontend package exists
 - API smoke testing remains separate because it requires a running backend server
+- Playwright smoke testing remains separate from `release-check` because it starts local servers and requires a browser runtime
 
 ## Local Validation Commands
 
@@ -131,6 +139,7 @@ bash -n scripts/*.sh
 cd backend && go test ./...
 cd frontend && npm install
 cd frontend && npm run build
+make e2e-smoke
 ```
 
 To run API smoke locally:
@@ -147,6 +156,19 @@ cd backend && HTTP_ADDR=127.0.0.1:18080 go run ./cmd/server
 API_BASE_URL=http://127.0.0.1:18080 make smoke-api
 ```
 
+The e2e smoke runner starts its own backend and frontend preview:
+
+```bash
+make e2e-smoke
+```
+
+Default smoke ports:
+
+```text
+API: 127.0.0.1:18080
+Web: 127.0.0.1:4173
+```
+
 ## PR Validation Expectations
 
 The PR Quality Gate should run on pull requests and pass before merge.
@@ -159,9 +181,9 @@ Future implementation PRs should include:
 - no secrets
 - no deployment unless explicitly in scope
 
-## Out-of-Scope Tests For Phase 5C
+## Out-of-Scope Tests For Phase 5D
 
-Phase 5C should not require:
+Phase 5D should not require:
 
 - production deployment tests
 - self-hosted runner checks
@@ -176,6 +198,6 @@ Later phases may add:
 
 - explicit Go setup
 - explicit frontend setup
-- Playwright smoke checks
+- broader Playwright coverage
 - artifact or coverage reporting
 - deployment verification

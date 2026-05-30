@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc && vite build"
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "e2e": "playwright test",
+    "e2e:smoke": "playwright test --grep @smoke"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "typescript": "^5.9.3",
     "vite": "^7.2.4"
   }

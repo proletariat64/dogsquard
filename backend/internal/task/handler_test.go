@@ -28,6 +28,23 @@ func TestHealthz(t *testing.T) {
 	assertJSONContentType(t, rec)
 }
 
+func TestAllowsLocalFrontendOrigins(t *testing.T) {
+	handler := NewHandler(NewStore())
+
+	for _, origin := range []string{"http://127.0.0.1:5173", "http://127.0.0.1:4173"} {
+		t.Run(origin, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+			req.Header.Set("Origin", origin)
+			handler.ServeHTTP(rec, req)
+
+			if got := rec.Header().Get("Access-Control-Allow-Origin"); got != origin {
+				t.Fatalf("access-control-allow-origin = %q, want %q", got, origin)
+			}
+		})
+	}
+}
+
 func TestListTasksEmpty(t *testing.T) {
 	handler := NewHandler(NewStore())
 

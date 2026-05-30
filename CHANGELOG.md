@@ -27,3 +27,7 @@
 - Backend API response hardening.
 - Frontend local API, error, empty, and loading state hardening.
 - Makefile smoke and frontend build targets.
+- Minimal Playwright smoke test.
+- Local e2e smoke runner.
+- PR Quality Gate Playwright smoke job.
+- Updated runbook and test plan for Playwright smoke.

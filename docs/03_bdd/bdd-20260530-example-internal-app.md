@@ -21,7 +21,7 @@ Feature: Internal Task Intake
     And task storage starts empty for the test context
 
   Scenario: Health check returns ok
-    When the user or system requests `GET /health`
+    When the user or system requests `GET /healthz`
     Then the API returns a successful response
     And the response body is JSON
     And the health status is `ok`

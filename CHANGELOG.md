@@ -19,3 +19,7 @@
 - Example internal app test plan.
 - ADR for choosing the internal task intake example.
 - Local development runbook for the example app.
+- Example Internal Task Intake backend skeleton.
+- Example frontend skeleton.
+- Backend task API tests.
+- PR Quality Gate scope guard updated for Phase 5B.

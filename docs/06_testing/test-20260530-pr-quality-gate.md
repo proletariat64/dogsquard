@@ -26,7 +26,7 @@ The Phase 4 workflow includes:
 - shell syntax validation for `scripts/*.sh`
 - repository hygiene through `git diff --check`
 - local foundation commands through `make help`, `make doc-check`, `make doc-guard`, and `make release-check`
-- temporary Phase 4 scope guard for forbidden out-of-phase paths
+- temporary scope guard for forbidden out-of-phase paths
 - final `PR Quality Summary` job that fails when a required job fails or is cancelled
 
 ## Checks Excluded From Phase 4
@@ -79,7 +79,7 @@ The `PR Quality Summary` job is intended to become the future required status ch
 
 ## Known Limitations
 
-- The scope guard is temporary and Phase 4 specific.
+- The scope guard is temporary and now allows backend/frontend changes for Phase 5B.
 - The workflow does not install Go or Node dependencies.
 - The workflow does not run Playwright.
 - The workflow does not deploy.

@@ -74,7 +74,7 @@ jobs:
           make release-check
 
   pr-scope-guard:
-    name: Temporary Phase 4 Scope Guard
+    name: Temporary Scope Guard
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -82,7 +82,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check changed files for forbidden Phase 4 paths
+      - name: Check changed files for forbidden paths
         shell: bash
         run: |
           set -euo pipefail
@@ -106,7 +106,7 @@ jobs:
           violations=()
           while IFS= read -r file; do
             case "$file" in
-              backend/*|frontend/*|deploy/*|docker-compose.yml|Dockerfile|.github/workflows/deploy.yml)
+              deploy/*|docker-compose.yml|Dockerfile|.github/workflows/deploy.yml)
                 violations+=("$file")
                 ;;
               playwright.config.*|*/playwright.config.*|playwright/*|e2e/*|tests/e2e/*|frontend/e2e/*|frontend/tests/e2e/*)
@@ -117,15 +117,15 @@ jobs:
 
           if [[ "${#violations[@]}" -gt 0 ]]; then
             echo
-            echo "Temporary Phase 4 scope guard failed."
-            echo "This PR must not add deployment, app code, Docker runtime files, or Playwright files."
+            echo "Temporary scope guard failed."
+            echo "This PR must not add deployment, Docker runtime files, or Playwright files."
             printf -- '- %s\n' "${violations[@]}"
             echo
             echo "Later phases can remove or relax this guard when those areas enter scope."
             exit 1
           fi
 
-          echo "Temporary Phase 4 scope guard passed."
+          echo "Temporary scope guard passed."
 
   pr-summary:
     name: PR Quality Summary

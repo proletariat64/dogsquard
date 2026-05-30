@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard watch-docs agent-docs release-check
+.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -11,6 +11,8 @@ help:
 	@echo "  make doc-guard     Run Doc Watch Guard report"
 	@echo "  make watch-docs    Re-run doc checks in a loop"
 	@echo "  make agent-docs    Print a safe agent documentation review prompt"
+	@echo "  make backend-dev   Run the example Go backend"
+	@echo "  make frontend-dev  Run the example frontend dev server"
 	@echo "  make release-check Run doc-check, lint, and test"
 
 test:
@@ -74,5 +76,11 @@ watch-docs:
 
 agent-docs:
 	@./scripts/agent-doc-review.sh
+
+backend-dev:
+	@cd backend && go run ./cmd/server
+
+frontend-dev:
+	@cd frontend && npm run dev
 
 release-check: doc-check lint test

@@ -23,7 +23,9 @@ func NewHandler(store *Store) http.Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:5173")
+	if isAllowedLocalOrigin(r.Header.Get("Origin")) {
+		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	}
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	if r.Method == http.MethodOptions {
@@ -31,6 +33,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.mux.ServeHTTP(w, r)
+}
+
+func isAllowedLocalOrigin(origin string) bool {
+	return origin == "http://127.0.0.1:5173" || origin == "http://127.0.0.1:4173"
 }
 
 func (h *Handler) routes() {

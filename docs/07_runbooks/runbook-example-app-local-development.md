@@ -87,7 +87,7 @@ cd frontend
 npm run build
 ```
 
-No dedicated frontend test script is included in Phase 5C.
+No dedicated frontend unit test script is included in Phase 5D.
 
 API smoke command:
 
@@ -99,6 +99,32 @@ The smoke command expects a running backend at `http://127.0.0.1:8080` by defaul
 
 ```bash
 API_BASE_URL=http://127.0.0.1:18080 make smoke-api
+```
+
+Playwright e2e smoke command:
+
+```bash
+make e2e-smoke
+```
+
+The e2e smoke runner:
+
+- starts the backend on `127.0.0.1:18080` by default
+- builds the frontend with `VITE_API_BASE_URL=http://127.0.0.1:18080`
+- starts Vite preview on `127.0.0.1:4173` by default
+- runs the `@smoke` Playwright test
+- cleans up local backend and frontend processes on exit
+
+Override ports when needed:
+
+```bash
+API_PORT=18081 WEB_PORT=4174 make e2e-smoke
+```
+
+If local Playwright browser installation is unavailable on the workstation, set `CHROMIUM_EXECUTABLE_PATH` to a system Chromium path:
+
+```bash
+CHROMIUM_EXECUTABLE_PATH=/snap/bin/chromium make e2e-smoke
 ```
 
 ## Three-Terminal Smoke Workflow
@@ -124,6 +150,14 @@ npm install
 npm run dev
 ```
 
+## One-Command E2E Smoke Workflow
+
+```bash
+make e2e-smoke
+```
+
+This is the preferred Phase 5D smoke command.
+
 ## Expected Release-Check Behavior
 
 `make release-check` should:
@@ -132,15 +166,15 @@ npm run dev
 - run backend lint and tests when Go files exist
 - run frontend lint and tests when scripts are available
 - run frontend build when `frontend/package.json` exists
-- pass with the Phase 5C skeleton and hardening
+- pass with the Phase 5D skeleton and smoke setup
 
-`make release-check` does not run `make smoke-api` because smoke testing requires a running backend process.
+`make release-check` does not run `make smoke-api` or `make e2e-smoke` because smoke testing starts local server processes.
 
 ## Known Pending Items
 
 - Persistent storage is not implemented.
 - Authentication is not implemented.
-- Playwright is planned later.
+- Full Playwright regression is planned later.
 - Deployment is planned later.
 
 ## Root Commands
@@ -151,6 +185,7 @@ make lint
 make backend-test
 make frontend-build
 make smoke-api
+make e2e-smoke
 make release-check
 make backend-dev
 make frontend-dev

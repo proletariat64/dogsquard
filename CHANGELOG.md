@@ -50,3 +50,7 @@
 - Local dev deploy wrapper.
 - Makefile package/deploy targets.
 - Dev deployment runbook and test plan updates.
+- Manual dev deploy validation guidance.
+- cn.ant isolated deploy validation notes.
+- us.hermes dry-run-only validation notes.
+- Dev deployment test plan updates for Phase 6B-2.

@@ -126,3 +126,18 @@ Phase 6B-1 must not:
 - claim `/`
 - claim `/api`
 - expose Dogsquard publicly
+
+## Phase 6B-2 Dry-Run Summary
+
+Phase 6B-2 ran `us.hermes` in dry-run mode only.
+
+Sanitized result:
+
+- dry-run deploy plan completed against an isolated home-directory deploy root
+- no real deploy activation was performed
+- no `current` symlink was changed by Dogsquard deploy
+- no reverse proxy config was changed
+- no nginx restart was performed
+- no multica container was touched
+
+Future real deployment on `us.hermes` requires an explicit route plan that preserves existing `/` and `/api` multica routing.

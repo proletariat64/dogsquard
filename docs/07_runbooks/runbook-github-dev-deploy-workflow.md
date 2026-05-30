@@ -15,9 +15,15 @@ supersedes: ""
 
 ## Purpose
 
-Prepare the manual GitHub configuration needed for a future dev deploy workflow that targets `cn.ant`.
+Prepare the manual GitHub configuration needed for the dev deploy workflow that targets `cn.ant`.
 
-Phase 6C-1 does not add the workflow. It defines the setup rules for Phase 6C-2.
+Phase 6C-2 adds:
+
+```text
+.github/workflows/deploy-dev.yml
+```
+
+The workflow deploys only through the GitHub Environment `development`.
 
 ## Required GitHub Environment
 
@@ -110,19 +116,32 @@ Recommended constraints:
 
 ## Workflow Trigger Expectations
 
-The future workflow should run on:
+The workflow runs on:
 
 - push to `main`
 - manual `workflow_dispatch`
 
 The workflow should not deploy from pull request branches.
 
+Manual dispatch inputs:
+
+- `deploy_ref`: optional Git ref to deploy. If omitted, the current workflow ref is used.
+- `dry_run`: `"true"` or `"false"`. Dry-run deploys the plan without activating a release.
+- `restart_runtime`: `"true"` or `"false"`. If false, deployment can complete without runtime restart or health check.
+
+For normal development deployment, use:
+
+```text
+dry_run=false
+restart_runtime=true
+```
+
 ## Inspect Workflow Logs
 
-When the future workflow exists:
+When the workflow runs:
 
 1. Open the Actions tab.
-2. Select the dev deploy workflow run.
+2. Select `Dev Deploy`.
 3. Read stage output in order.
 4. Check package, SSH, deploy, runtime, and health stages.
 5. Check diagnostic output only after failures.
@@ -146,6 +165,14 @@ In workflow logs, look for:
 - runtime restart failure
 - runtime health failure
 
+On failure, the workflow attempts safe diagnostics:
+
+- runtime status
+- runtime diagnose
+- runtime logs
+
+Diagnostics should not use `sudo`, edit server config, or dump secrets.
+
 ## Manual Rollback
 
 Rollback remains explicit:
@@ -160,6 +187,9 @@ Do not run rollback on `us.hermes` in this phase.
 
 ## Explicit Warnings
 
+- `DEV_HOST` must identify the `cn.ant` dev target or its real hostname/IP.
+- The local SSH alias `cn.ant` may not work from GitHub-hosted runners.
+- The workflow rejects `us.hermes`, `proletariat.icu`, and `www.proletariat.icu`.
 - Do not configure `us.hermes` for dev deploy yet.
 - Do not expose a public URL yet.
 - Do not configure production.

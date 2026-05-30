@@ -161,3 +161,17 @@ The future workflow should deploy only under the configured development deploy r
 or the configured `DEV_DEPLOY_ROOT`.
 
 This does not imply public routing or reverse proxy integration.
+
+## Phase 6C-2 Dev Workflow Implementation Note
+
+`cn.ant` is the first automated dev deploy target.
+
+GitHub-hosted runners may not know the local SSH alias `cn.ant`, so `DEV_HOST` may need to be the real reachable hostname or IP for the same host.
+
+Deployment remains isolated under:
+
+```text
+DEV_DEPLOY_ROOT
+```
+
+No public route is exposed by the workflow.

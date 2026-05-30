@@ -35,3 +35,8 @@
 - CI failure debugging runbook.
 - CI quality gates test plan.
 - PR Quality Gate documentation hardening.
+- Dev deployment PRD.
+- Dev deployment ADR.
+- Dev deployment runbook.
+- Dev deployment test plan.
+- Dev deployment BDD scenarios.

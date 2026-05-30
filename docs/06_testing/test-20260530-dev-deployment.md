@@ -303,6 +303,23 @@ Later phases may add:
 - self-hosted runner UAT
 - Docker or Docker Compose checks if a future ADR approves them
 
+## Phase 6C Workflow Testing Direction
+
+Phase 6C workflow testing should build on Phase 6B manual validation.
+
+The future GitHub workflow should verify:
+
+- repository validation
+- package release
+- artifact deploy to `cn.ant`
+- runtime restart
+- runtime health
+- diagnostics on failure
+
+Phase 6C should not validate public routing yet.
+
+`us.hermes` remains excluded from dev deploy workflow testing until a route strategy is approved.
+
 ## Acceptance Criteria For Phase 6B Implementation
 
 - deployment workflow runs only after merge to `main`
@@ -368,4 +385,15 @@ Later phases may add:
 - no reverse proxy config is modified
 - no service is restarted
 - no Docker state is modified
+- no public route is exposed
+
+## Acceptance Criteria For Phase 6C-1
+
+- dev deploy workflow PRD exists
+- dev deploy workflow BDD scenarios exist
+- dev deploy workflow test plan exists
+- GitHub dev deploy workflow runbook exists
+- ADR for GitHub Actions dev deploy to `cn.ant` exists
+- existing dev deployment docs point to the Phase 6C direction
+- no deploy workflow is added
 - no public route is exposed

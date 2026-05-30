@@ -626,6 +626,10 @@ skip-docs label is allowed, but should require PR explanation.
 
 ## Phase 5: Development Deployment
 
+Phase 6A update: dev deployment direction is now documented in `docs/02_prd/prd-20260530-dev-deployment.md`, `docs/04_adr/0003-use-ssh-artifact-deploy-for-dev.md`, `docs/03_bdd/bdd-20260530-dev-deployment.md`, `docs/06_testing/test-20260530-dev-deployment.md`, and `docs/07_runbooks/runbook-dev-deployment.md`.
+
+The accepted Phase 6A direction is GitHub Actions building, testing, packaging, and later deploying a dev artifact over SSH to a cloud host. Docker, Docker Compose, self-hosted runner, production deployment, and server configuration changes remain out of scope for Phase 6A.
+
 ### Objective
 
 After merge to `main`, deploy automatically to the development cloud host.
@@ -651,7 +655,7 @@ main merge
   -> SSH to dev host
   -> unpack into release directory
   -> update current symlink
-  -> docker compose up -d --build
+  -> start or reload dev runtime in a later implementation phase
   -> run smoke verification
 ```
 

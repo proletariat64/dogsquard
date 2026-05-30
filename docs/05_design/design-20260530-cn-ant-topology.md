@@ -82,3 +82,23 @@ Do not commit raw output if it includes sensitive paths, private hostnames, or s
 This does not prove `cn.ant` is the final dev host.
 
 Domain routing remains unconfirmed, so Phase 6B-1 should use only an isolated deploy root and must not assume public HTTPS access.
+
+## Phase 6B-2 Manual Deploy Summary
+
+Phase 6B-2 validated `cn.ant` as the preferred host for early isolated dev deploy validation.
+
+Sanitized result:
+
+- `cn.ant` accepted a dry-run deploy plan under `~/apps/dogsquard-dev`.
+- `cn.ant` accepted a real isolated deploy under `~/apps/dogsquard-dev`.
+- The deploy root contains `releases/`, `shared/`, and `logs/`.
+- `current` points to a timestamped release under `releases/`.
+
+Still not confirmed:
+
+- public domain routing
+- reverse proxy integration
+- service manager integration
+- runtime process start strategy
+
+`cn.ant` is preferred for the next early dev deployment validation because it avoids the known `us.hermes` multica routing constraints.

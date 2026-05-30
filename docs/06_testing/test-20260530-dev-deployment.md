@@ -97,6 +97,35 @@ If the user explicitly approves manual deploy with `DRY_RUN=false`, verify:
 - no reverse proxy config changed
 - no multica services changed
 
+## Phase 6B-2 Validation Results
+
+Phase 6B-2 was validated from local `main` after Phase 6B-1 was merged.
+
+Validated successfully:
+
+- `make package-release`
+- `make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make deploy-dev HOST=cn.ant DRY_RUN=false DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `ssh cn.ant` post-deploy layout checks
+- `make deploy-dev-dry-run HOST=us.hermes DEPLOY_ROOT=~/apps/dogsquard-dev`
+
+Sanitized `cn.ant` result:
+
+- release artifact uploaded to the remote temporary artifact path
+- isolated deploy root created under the user's home directory
+- `releases/`, `shared/`, and `logs/` directories exist
+- `current` points to a timestamped release under `releases/`
+- no reverse proxy integration was configured
+- no public URL was exposed
+
+Sanitized `us.hermes` result:
+
+- dry-run plan completed
+- no real deploy activation was performed
+- multica routing remains protected
+
+No raw server config, secrets, SSH config, or full command output is committed.
+
 ## Deployment Verification Checks
 
 After artifact upload, verify:
@@ -213,3 +242,15 @@ Later phases may add:
 - scripts do not restart nginx, Caddy, Traefik, multica, or Docker services
 - scripts do not require `sudo`
 - no public route is configured
+
+## Acceptance Criteria For Phase 6B-2
+
+- release packaging is validated from `main`
+- `cn.ant` dry-run deploy succeeds
+- `cn.ant` real isolated deploy succeeds under `~/apps/dogsquard-dev`
+- `cn.ant` `current` symlink points to a release under `releases/`
+- `us.hermes` deploy validation remains dry-run only
+- no reverse proxy config is modified
+- no service is restarted
+- no Docker state is modified
+- no public route is exposed

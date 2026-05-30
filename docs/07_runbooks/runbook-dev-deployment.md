@@ -253,6 +253,54 @@ Phase 6B-1 actual deploy only prepares a release directory and `current` symlink
 - configure a systemd service
 - configure Docker
 
+## Phase 6B-2 Manual Validation
+
+Phase 6B-2 validates manual artifact deployment without adding a GitHub Actions deploy workflow.
+
+Run `cn.ant` dry-run first:
+
+```bash
+make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Run `cn.ant` real isolated deploy only after dry-run succeeds:
+
+```bash
+make deploy-dev HOST=cn.ant DRY_RUN=false DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Check the remote layout:
+
+```bash
+ssh cn.ant 'ls -la ~/apps/dogsquard-dev && ls -la ~/apps/dogsquard-dev/releases && readlink ~/apps/dogsquard-dev/current || true'
+```
+
+Expected successful layout:
+
+```text
+~/apps/dogsquard-dev/
+  releases/
+  current -> releases/<release-id>
+  shared/
+  logs/
+```
+
+Use `us.hermes` dry-run only:
+
+```bash
+make deploy-dev-dry-run HOST=us.hermes DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Do not run `DRY_RUN=false` on `us.hermes` yet.
+
+Phase 6B-2 does not validate:
+
+- public URL exposure
+- reverse proxy routing
+- systemd or service lifecycle
+- GitHub Actions deploy workflow
+- production deploy
+
 ## Future GitHub Actions Flow
 
 The Phase 6B workflow should:

@@ -141,3 +141,17 @@ Sanitized result:
 - no multica container was touched
 
 Future real deployment on `us.hermes` requires an explicit route plan that preserves existing `/` and `/api` multica routing.
+
+## Phase 6B-3 Runtime Warning
+
+Runtime start and restart remain blocked by default for `us.hermes`.
+
+Phase 6B-3 did not perform real runtime activation on `us.hermes`.
+
+Future `us.hermes` runtime activation requires an explicit route strategy that protects:
+
+- `/`
+- `/api`
+- existing multica containers
+- existing reverse proxy configuration
+- existing SSL configuration

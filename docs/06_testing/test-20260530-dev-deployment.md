@@ -126,6 +126,37 @@ Sanitized `us.hermes` result:
 
 No raw server config, secrets, SSH config, or full command output is committed.
 
+## Phase 6B-3 Runtime Validation Results
+
+Phase 6B-3 validated user-level runtime management on `cn.ant`.
+
+Validated successfully:
+
+- `make deploy-dev HOST=cn.ant DRY_RUN=false DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-start HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-health HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-stop HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- stopped status after runtime stop
+- `make runtime-start HOST=us.hermes DEPLOY_ROOT=~/apps/dogsquard-dev` is blocked by default
+
+Sanitized `cn.ant` result:
+
+- backend ran on `127.0.0.1:18080`
+- frontend static server ran on `127.0.0.1:14173`
+- pid files were managed under `shared/run/`
+- logs were written under `logs/`
+- health checks passed before stop
+- both processes were stopped after validation
+
+Issue found and fixed:
+
+- first runtime attempt exposed a glibc mismatch for the Go backend binary
+- `scripts/package-release.sh` now builds the backend with `CGO_ENABLED=0`
+- the statically linked backend artifact validated on `cn.ant`
+
+No public URL was exposed, no reverse proxy was changed, and no system-wide service was added.
+
 ## Deployment Verification Checks
 
 After artifact upload, verify:
@@ -205,6 +236,17 @@ Phase 6B-1 script failure cases:
 - unwritable deploy root fails without `sudo`
 - existing release directory blocks overwrite
 
+Phase 6B-3 runtime failure cases:
+
+- missing `current` symlink blocks start
+- missing backend binary blocks start
+- missing frontend dist blocks start
+- backend port occupied causes backend health failure
+- frontend port occupied causes frontend start or health failure
+- stale pid file is reported and removed during start or stop
+- missing `python3` blocks frontend static serving
+- missing `curl` blocks health checks
+
 ## Future CI/CD Checks
 
 Later phases may add:
@@ -250,6 +292,19 @@ Later phases may add:
 - `cn.ant` real isolated deploy succeeds under `~/apps/dogsquard-dev`
 - `cn.ant` `current` symlink points to a release under `releases/`
 - `us.hermes` deploy validation remains dry-run only
+- no reverse proxy config is modified
+- no service is restarted
+- no Docker state is modified
+- no public route is exposed
+
+## Acceptance Criteria For Phase 6B-3
+
+- runtime start succeeds on `cn.ant`
+- runtime status reports backend and frontend running
+- runtime health passes for backend and frontend localhost endpoints
+- runtime stop stops only Dogsquard pid-file processes
+- stopped status reports backend and frontend stopped
+- `us.hermes` runtime start is blocked by default
 - no reverse proxy config is modified
 - no service is restarted
 - no Docker state is modified

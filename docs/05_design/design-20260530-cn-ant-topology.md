@@ -102,3 +102,22 @@ Still not confirmed:
 - runtime process start strategy
 
 `cn.ant` is preferred for the next early dev deployment validation because it avoids the known `us.hermes` multica routing constraints.
+
+## Phase 6B-3 Runtime Summary
+
+Phase 6B-3 validated `cn.ant` as the preferred host for early Dogsquard dev runtime validation.
+
+Sanitized result:
+
+- Dogsquard backend ran on localhost port `18080`.
+- Dogsquard frontend static server ran on localhost port `14173`.
+- Runtime state used pid files under `~/apps/dogsquard-dev/shared/run/`.
+- Runtime logs used `~/apps/dogsquard-dev/logs/`.
+- Runtime health passed before shutdown.
+- Runtime stop left backend and frontend stopped.
+
+No public URL was exposed.
+
+No reverse proxy integration was added.
+
+No system-wide service was added.

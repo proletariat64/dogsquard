@@ -54,3 +54,8 @@
 - cn.ant isolated deploy validation notes.
 - us.hermes dry-run-only validation notes.
 - Dev deployment test plan updates for Phase 6B-2.
+- Dev runtime management script.
+- Local runtime wrapper.
+- Makefile runtime targets.
+- cn.ant runtime validation notes.
+- Dev deployment runbook and test plan updates for Phase 6B-3.

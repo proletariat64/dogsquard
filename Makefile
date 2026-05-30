@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -19,6 +19,11 @@ help:
 	@echo "  make package-release Build backend/frontend release artifact"
 	@echo "  make deploy-dev HOST=<ssh-target> DRY_RUN=true|false Run opt-in dev deploy wrapper"
 	@echo "  make deploy-dev-dry-run HOST=<ssh-target> Run dev deploy wrapper in dry-run mode"
+	@echo "  make runtime-status HOST=<ssh-target> Check remote Dogsquard runtime status"
+	@echo "  make runtime-start HOST=<ssh-target> Start remote Dogsquard runtime"
+	@echo "  make runtime-stop HOST=<ssh-target> Stop remote Dogsquard runtime"
+	@echo "  make runtime-restart HOST=<ssh-target> Restart remote Dogsquard runtime"
+	@echo "  make runtime-health HOST=<ssh-target> Check remote Dogsquard runtime health"
 	@echo "  make backend-dev   Run the example Go backend"
 	@echo "  make frontend-dev  Run the example frontend dev server"
 	@echo "  make release-check Run doc-check, lint, test, and frontend build"
@@ -126,6 +131,41 @@ deploy-dev-dry-run:
 		exit 2; \
 	fi; \
 	DRY_RUN=true ./scripts/deploy-dev.sh
+
+runtime-status:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		exit 2; \
+	fi; \
+	ACTION=status ./scripts/runtime-dev.sh
+
+runtime-start:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make runtime-start HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		exit 2; \
+	fi; \
+	ACTION=start ./scripts/runtime-dev.sh
+
+runtime-stop:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make runtime-stop HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		exit 2; \
+	fi; \
+	ACTION=stop ./scripts/runtime-dev.sh
+
+runtime-restart:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make runtime-restart HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		exit 2; \
+	fi; \
+	ACTION=restart ./scripts/runtime-dev.sh
+
+runtime-health:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make runtime-health HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev"; \
+		exit 2; \
+	fi; \
+	ACTION=health ./scripts/runtime-dev.sh
 
 backend-dev:
 	@cd backend && go run ./cmd/server

@@ -17,7 +17,7 @@ supersedes: ""
 
 Define how to validate the future GitHub Actions development deployment workflow before it becomes a trusted release path.
 
-Phase 6C-1 is design only. Phase 6C-2 may implement the workflow.
+Phase 6C-1 is design only. Phase 6C-2 implements the first dev deploy workflow.
 
 ## Local Preconditions
 
@@ -66,7 +66,7 @@ It should not print secret values.
 
 ## Workflow Validation Steps
 
-Phase 6C-2 should validate:
+Phase 6C-2 validates:
 
 1. checkout works
 2. repository validation passes
@@ -76,6 +76,67 @@ Phase 6C-2 should validate:
 6. runtime restart succeeds
 7. runtime health succeeds
 8. diagnostics run on failure
+
+Workflow file:
+
+```text
+.github/workflows/deploy-dev.yml
+```
+
+## Phase 6C-2 Validation
+
+Required local validation:
+
+- `make doc-check`
+- `make doc-guard`
+- `make release-check`
+- `git diff --check`
+- `bash -n scripts/*.sh`
+- `cd backend && go test ./...`
+- `cd frontend && npm install`
+- `cd frontend && npm run build`
+- `make e2e-smoke`
+- `make package-release`
+- `make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+
+The dev deploy workflow should not run from pull requests.
+
+After merge, it may run on push to `main`. If the `development` environment is not configured yet, it should fail with a clear missing configuration message.
+
+## Dry-Run Workflow Test
+
+Manual `workflow_dispatch` with `dry_run=true` should:
+
+- checkout the selected ref
+- validate local quality
+- package release artifact
+- configure SSH
+- run the deploy wrapper in dry-run mode
+- skip runtime restart and health activation
+- run only safe status if configured to do so
+
+## Real Deploy Workflow Test Expectation
+
+Manual `workflow_dispatch` with `dry_run=false` and `restart_runtime=true` should:
+
+- deploy artifact to `cn.ant`
+- update the dev `current` symlink under `DEV_DEPLOY_ROOT`
+- restart runtime through `scripts/runtime-dev.sh`
+- run runtime health
+- fail if health fails
+
+This test requires configured environment secrets and variables.
+
+## Failure Diagnostic Expectation
+
+If deploy, restart, or health fails, the workflow should attempt:
+
+- runtime status
+- runtime diagnose
+- runtime logs
+
+Diagnostics must not target `us.hermes` and must not print secrets.
 
 ## Success Path Test
 
@@ -183,3 +244,4 @@ Workflow logs should not show:
 - workflow does not deploy production
 - workflow does not deploy to `us.hermes`
 - workflow does not expose a public URL
+- workflow rejects protected `us.hermes` and `proletariat.icu` targets

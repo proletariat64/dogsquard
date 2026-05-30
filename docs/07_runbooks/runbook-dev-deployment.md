@@ -439,6 +439,18 @@ Phase 6B-4 still does not add:
 
 Phase 6C should automate `cn.ant` dev deploy through GitHub Actions after the Phase 6B scripts have been validated manually.
 
+Phase 6C-2 adds:
+
+```text
+.github/workflows/deploy-dev.yml
+```
+
+The workflow uses the GitHub Environment:
+
+```text
+development
+```
+
 The future workflow should reuse:
 
 - `scripts/package-release.sh`
@@ -461,6 +473,8 @@ The future workflow should:
 `us.hermes` remains protected and must not be the first automated dev deploy target.
 
 Production remains a future phase.
+
+The local scripts remain the source of truth for artifact packaging, SSH deploy, runtime restart, health checks, diagnostics, and rollback.
 
 ## Health Verification
 
@@ -604,3 +618,17 @@ Phase 6C-1 still does not add:
 - runtime activation on `us.hermes`
 - Docker or Docker Compose for Dogsquard
 - production deployment
+
+## Phase 6C-2 Boundary
+
+Phase 6C-2 adds the development deploy workflow for GitHub Actions.
+
+Phase 6C-2 still does not add:
+
+- production deployment
+- `us.hermes` deployment
+- public URL exposure
+- reverse proxy configuration
+- Docker or Docker Compose for Dogsquard
+- self-hosted runner
+- database or auth setup

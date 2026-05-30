@@ -184,3 +184,13 @@ Any future `us.hermes` activation requires a separate route strategy that protec
 - existing multica containers
 - existing reverse proxy configuration
 - existing SSL configuration
+
+## Phase 6C-2 Dev Workflow Guard
+
+The dev deploy workflow explicitly rejects protected targets:
+
+- `us.hermes`
+- `proletariat.icu`
+- `www.proletariat.icu`
+
+The workflow must not deploy to `us.hermes`.

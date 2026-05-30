@@ -14,6 +14,13 @@ COMPONENT="${COMPONENT:-}"
 LOG_LINES="${LOG_LINES:-80}"
 TARGET_RELEASE="${TARGET_RELEASE:-}"
 RESTART_AFTER_ROLLBACK="${RESTART_AFTER_ROLLBACK:-false}"
+SSH_USER="${SSH_USER:-}"
+SSH_KEY_FILE="${SSH_KEY_FILE:-}"
+SSH_OPTS="${SSH_OPTS:-}"
+
+if [[ "${1:-}" != "" ]]; then
+  ACTION="$1"
+fi
 
 usage() {
   cat <<'USAGE' >&2
@@ -31,6 +38,9 @@ Environment:
   ACTION                  start|stop|status|restart|health|logs|diagnose|rollback. Defaults to status.
   DEPLOY_ROOT             Defaults to ~/apps/dogsquard-dev.
   ALLOW_US_HERMES_RUNTIME Defaults to false. Do not enable in Phase 6B-3.
+  SSH_USER                Optional remote SSH user. If set, connects to SSH_USER@HOST.
+  SSH_KEY_FILE            Optional SSH private key path.
+  SSH_OPTS                Optional extra ssh options.
 
 This wrapper runs scripts/remote-runtime.sh over SSH.
 It does not use sudo, edit reverse proxy config, or touch Docker.
@@ -65,6 +75,20 @@ quote() {
   printf "%q" "$1"
 }
 
+ssh_target="$HOST"
+if [[ -n "$SSH_USER" ]]; then
+  ssh_target="${SSH_USER}@${HOST}"
+fi
+
+ssh_args=()
+if [[ -n "$SSH_KEY_FILE" ]]; then
+  ssh_args+=("-i" "$SSH_KEY_FILE")
+fi
+if [[ -n "$SSH_OPTS" ]]; then
+  read -r -a extra_ssh_args <<< "$SSH_OPTS"
+  ssh_args+=("${extra_ssh_args[@]}")
+fi
+
 echo "Runtime wrapper"
 echo "HOST=${HOST}"
 echo "ACTION=${ACTION}"
@@ -78,6 +102,12 @@ fi
 if [[ "$ACTION" == "rollback" ]]; then
   echo "TARGET_RELEASE=${TARGET_RELEASE}"
 fi
+if [[ -n "$SSH_USER" ]]; then
+  echo "SSH_USER=${SSH_USER}"
+fi
+if [[ -n "$SSH_KEY_FILE" ]]; then
+  echo "SSH_KEY_FILE=<provided>"
+fi
 echo
 echo "Safety boundaries:"
 echo "- no sudo"
@@ -86,6 +116,6 @@ echo "- no Docker commands"
 echo "- no multica operations"
 echo
 
-ssh "$HOST" \
+ssh "${ssh_args[@]}" "$ssh_target" \
   "APP_NAME=$(quote "$APP_NAME") DEPLOY_ROOT=$(quote "$DEPLOY_ROOT") BACKEND_HOST=$(quote "$BACKEND_HOST") BACKEND_PORT=$(quote "$BACKEND_PORT") FRONTEND_HOST=$(quote "$FRONTEND_HOST") FRONTEND_PORT=$(quote "$FRONTEND_PORT") LOG_LINES=$(quote "$LOG_LINES") TARGET_RELEASE=$(quote "$TARGET_RELEASE") RESTART_AFTER_ROLLBACK=$(quote "$RESTART_AFTER_ROLLBACK") bash -s -- $(quote "$ACTION") $(quote "$COMPONENT")" \
   < scripts/remote-runtime.sh

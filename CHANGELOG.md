@@ -70,3 +70,7 @@
 - Dev deploy workflow test plan.
 - GitHub dev deploy workflow runbook.
 - ADR for using GitHub Actions to deploy dev to cn.ant.
+- Dev Deploy GitHub Actions workflow.
+- GitHub Actions SSH support in deploy/runtime scripts.
+- Dev deploy workflow runbook and test updates.
+- Safety guard rejecting us.hermes/proletariat.icu as dev workflow targets.

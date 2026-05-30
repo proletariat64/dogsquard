@@ -136,6 +136,35 @@ The dev deployment should support a configured base URL and API URL rather than 
 
 The frontend build should be able to target the configured dev API URL.
 
+## Real Environment Update
+
+The user has confirmed that `us.hermes` hosts:
+
+```text
+https://proletariat.icu
+https://www.proletariat.icu
+```
+
+Existing routing on `us.hermes`:
+
+```text
+/      -> multica frontend Docker service
+/api   -> multica backend Docker service
+```
+
+Dogsquard dev deployment must not use `/` or `/api` on `proletariat.icu`.
+
+Potential future safe paths include:
+
+```text
+/dogsquard-dev
+/dogsquard-dev/api
+/dev/dogsquard
+/dev/dogsquard/api
+```
+
+Final routing remains undecided until server preflight has been run and summarized safely.
+
 ## Health Check Expectations
 
 The deployed backend should expose:

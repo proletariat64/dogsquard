@@ -131,6 +131,31 @@ Before implementing or enabling dev deployment:
 - rollback directory layout is understood
 - production environment is not targeted
 
+## us.hermes Multica Warning
+
+`us.hermes` already serves multica through:
+
+```text
+https://proletariat.icu
+https://www.proletariat.icu
+```
+
+Existing routes:
+
+```text
+/      -> multica frontend Docker service
+/api   -> multica backend Docker service
+```
+
+Before any Dogsquard deploy implementation:
+
+- run server preflight first
+- do not overwrite root routing
+- do not overwrite `/api`
+- do not restart services during discovery
+- do not edit reverse proxy or SSL config during discovery
+- do not stop or restart multica containers
+
 ## Future GitHub Actions Flow
 
 The Phase 6B workflow should:

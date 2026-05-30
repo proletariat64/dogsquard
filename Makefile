@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -15,6 +15,7 @@ help:
 	@echo "  make frontend-build Install frontend dependencies and build"
 	@echo "  make smoke-api     Run API smoke test against a running backend"
 	@echo "  make e2e-smoke     Run minimal Playwright smoke test with local servers"
+	@echo "  make server-preflight HOST=<ssh-target> Run read-only server discovery"
 	@echo "  make backend-dev   Run the example Go backend"
 	@echo "  make frontend-dev  Run the example frontend dev server"
 	@echo "  make release-check Run doc-check, lint, test, and frontend build"
@@ -96,6 +97,14 @@ smoke-api:
 
 e2e-smoke:
 	@./scripts/e2e-smoke.sh
+
+server-preflight:
+	@if [[ -z "$${HOST:-}" ]]; then \
+		echo "Usage: make server-preflight HOST=us.hermes"; \
+		echo "   or: make server-preflight HOST=cn.ant"; \
+		exit 2; \
+	fi; \
+	./scripts/server-preflight.sh "$$HOST"
 
 backend-dev:
 	@cd backend && go run ./cmd/server

@@ -17,7 +17,7 @@ supersedes: ""
 
 Define how Dogsquard should verify development deployments when Phase 6B implements the SSH artifact deployment path.
 
-Phase 6A documents the test plan only.
+Phase 6B-1 validates local packaging and opt-in manual deploy scripts. It does not validate public routing or production deployment.
 
 ## Pre-Deploy Checks
 
@@ -32,6 +32,71 @@ Before deployment starts, the future workflow should verify:
 - required GitHub variables are present
 - production deployment is not targeted
 
+For Phase 6B-1 local validation, run:
+
+```bash
+make package-release
+make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Use `us.hermes` dry-run only after confirming the deploy root is isolated from multica:
+
+```bash
+make deploy-dev-dry-run HOST=us.hermes DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Actual deploy is optional for PR acceptance and requires explicit `DRY_RUN=false`.
+
+## Package Release Validation
+
+Verify `make package-release`:
+
+- builds the backend binary
+- builds frontend static assets
+- writes a `.tar.gz` artifact under `dist/`
+- includes `release/manifest.txt`
+- includes `release/backend/dogsquard-server`
+- includes `release/frontend/dist/`
+- excludes `.git`
+- excludes `node_modules`
+- excludes `.env.local`
+- excludes secrets
+
+Artifact contents can be inspected locally:
+
+```bash
+tar -tzf dist/dogsquard-*.tar.gz
+```
+
+## Remote Deploy Dry-Run Validation
+
+Verify `make deploy-dev-dry-run`:
+
+- requires `HOST`
+- packages a release if `ARTIFACT` is not provided
+- uploads the artifact to the remote artifact path
+- runs the remote deploy script in `DRY_RUN=true`
+- prints planned release directory operations
+- does not create release directories
+- does not extract the artifact
+- does not update `current`
+- does not edit reverse proxy config
+- does not restart services
+- does not run Docker commands
+
+## Actual Manual Deploy Validation
+
+If the user explicitly approves manual deploy with `DRY_RUN=false`, verify:
+
+- artifact exists on the remote host
+- deploy root exists or is created in the selected writable path
+- release directory is created under `releases/`
+- artifact extracts into the release directory
+- `current` points to the new release
+- previous releases remain available
+- no reverse proxy config changed
+- no multica services changed
+
 ## Deployment Verification Checks
 
 After artifact upload, verify:
@@ -41,6 +106,8 @@ After artifact upload, verify:
 - release metadata includes commit SHA
 - `current` symlink points to the new release only after successful activation
 - previous release remains available
+
+For Phase 6B-1, these checks apply only when `DRY_RUN=false` is explicitly used.
 
 ## Health Check
 
@@ -101,6 +168,14 @@ The future implementation should cover:
 - smoke failure does not replace current release
 - rollback failure is reported clearly
 
+Phase 6B-1 script failure cases:
+
+- missing `HOST` blocks local deploy wrapper
+- missing artifact blocks remote deploy
+- invalid `DRY_RUN` value blocks deploy
+- unwritable deploy root fails without `sudo`
+- existing release directory blocks overwrite
+
 ## Future CI/CD Checks
 
 Later phases may add:
@@ -124,3 +199,17 @@ Later phases may add:
 - failed deployment preserves previous release
 - rollback path is documented and testable
 - production deployment is not triggered
+
+## Acceptance Criteria For Phase 6B-1
+
+- `make package-release` creates a local artifact
+- artifact contains backend binary and frontend static assets
+- artifact manifest documents commit SHA and build time
+- deploy wrapper defaults to dry-run
+- remote deploy script defaults to dry-run
+- dry-run does not create directories, extract artifacts, or update symlinks
+- actual deploy requires explicit `DRY_RUN=false`
+- scripts do not edit reverse proxy config
+- scripts do not restart nginx, Caddy, Traefik, multica, or Docker services
+- scripts do not require `sudo`
+- no public route is configured

@@ -108,3 +108,21 @@ No `--deep` preflight was run, no proxy configuration was dumped, and no server 
 `us.hermes` is an important shared host because it already serves multica through the `proletariat.icu` domain.
 
 Dogsquard deployment design must preserve existing multica routing first, then add Dogsquard only under a confirmed safe path or endpoint.
+
+## Phase 6B-1 Deploy Script Warning
+
+If `us.hermes` is used for Phase 6B-1 script validation, Dogsquard must use an isolated deploy root such as:
+
+```bash
+DEPLOY_ROOT=~/apps/dogsquard-dev
+```
+
+Phase 6B-1 must not:
+
+- edit nginx config
+- restart nginx
+- touch multica containers
+- use Docker for Dogsquard
+- claim `/`
+- claim `/api`
+- expose Dogsquard publicly

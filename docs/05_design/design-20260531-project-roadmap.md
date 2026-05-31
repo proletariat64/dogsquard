@@ -156,15 +156,22 @@ Result:
 
 ### Milestone 6E: Template Finalization
 
-Includes:
+6E should remain bounded to design and implementation. Do not create 6F, 6G, or 6H unless a genuinely new milestone is needed.
 
-- cleanup template instructions
-- bootstrap and init docs
-- how to create a new repo from Dogsquard
-- agent onboarding files decision
-- final local, CI, and dev-deploy checklist
-- README improvement
-- maybe release `v0.1.0`
+Deliverables:
+
+- 6E-A Template Productization Design
+- 6E-B Template Finalization Implementation
+- optional `v0.1.0` release candidate
+
+Scope:
+
+- define template kit boundary
+- decide example app handling
+- decide agent-local files policy
+- design and implement bootstrap/init flow
+- improve README as template entrypoint
+- define final local, CI, and dev-deploy checklist
 
 ### Milestone 7: Production Deployment Later
 
@@ -178,8 +185,9 @@ Includes:
 
 ## Open Questions
 
-- Is SSH tunnel enough for dev validation?
-- Do we need direct high-port access on `cn.ant`?
-- Do we need a dev domain or subdomain later?
 - When should Dogsquard become a reusable template release?
 - Should agent-local files like `AGENTS.md`, `CLAUDE.md`, and `roster.md` be committed or ignored?
+- Should the example internal app move under `examples/` or become an init option?
+- Should the first bootstrap implementation be script-based, checklist-based, or both?
+- Do we need direct high-port access on `cn.ant` later?
+- Do we need a dev domain or subdomain later?

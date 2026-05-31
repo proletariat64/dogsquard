@@ -223,3 +223,24 @@ No Phase 6C workflow may target:
 - `www.proletariat.icu`
 
 Workflow rollback support does not change this boundary. Rollback is for the cn.ant development deploy root only.
+
+## Phase 6D Dev Public Access Warning
+
+User-provided firewall policy for `us.hermes` allows public access on:
+
+- `80`
+- `22`
+- `443`
+- `8000-8999`
+- ICMP / ping
+
+This does not make `us.hermes` a Dogsquard dev public access target.
+
+Dogsquard dev public access must not use:
+
+- `proletariat.icu/`
+- `proletariat.icu/api`
+- `www.proletariat.icu/`
+- `www.proletariat.icu/api`
+
+No public access through `us.hermes` is designed or implemented in Phase 6D.

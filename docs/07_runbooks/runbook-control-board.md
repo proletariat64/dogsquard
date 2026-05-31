@@ -164,6 +164,23 @@ Agents should:
 - keep Issue #1 readable
 - update relevant docs when process or roadmap meaning changes
 
+## Milestone-Level Deliverables
+
+The Control Board should track milestone-level deliverables, not command-level tasks.
+
+For Milestone 6E, the intended split is:
+
+- 6E-A Template Productization Design
+- 6E-B Template Finalization Implementation
+
+After 6E, move to one of:
+
+- `v0.1.0` release candidate
+- Milestone 7 Production Deployment Later
+- Milestone 8 Optional Hardening / Polish
+
+Do not create `6F`, `6G`, or `6H` unless the user explicitly defines a genuinely new milestone.
+
 ## Anti-Patterns
 
 Avoid:

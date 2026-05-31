@@ -99,3 +99,8 @@
 - Dev access stabilization.
 - SSH tunnel validation for cn.ant frontend and backend.
 - Decision to keep direct high-port and reverse proxy access deferred.
+- Template finalization PRD.
+- ADR defining Dogsquard template kit boundary.
+- New repo bootstrap runbook.
+- Template finalization test plan.
+- Roadmap and Control Board updates for 6E.

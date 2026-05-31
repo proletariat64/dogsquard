@@ -79,3 +79,8 @@
 - Real dev deploy workflow validation to cn.ant.
 - Protected target guard update for us.hermes IP.
 - Dev deploy workflow setup-go cache warning cleanup.
+- Dev Deploy workflow configuration preflight.
+- Protected target guard hardening.
+- Failure diagnostics hardening.
+- Workflow rollback dispatch support.
+- Dev deploy workflow runbook and test updates for Phase 6C-4.

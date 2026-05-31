@@ -493,6 +493,31 @@ Sanitized result:
 
 Local scripts remain the fallback path if GitHub Actions is unavailable.
 
+## Phase 6C-4 Workflow Hardening
+
+Phase 6C-4 adds hardened Dev Deploy workflow preflight and diagnostics.
+
+The workflow now fails before SSH setup when required development environment names are missing or malformed.
+
+It validates:
+
+- required secrets and variables are present
+- runtime ports are numeric
+- deploy action is valid
+- rollback includes an explicit target release
+- protected hosts are not targeted
+
+Manual workflow rollback is available only through explicit `workflow_dispatch` with:
+
+```text
+action=rollback
+target_release=<release-id>
+```
+
+Rollback uses the existing runtime wrapper and switches only the Dogsquard `current` symlink under `DEV_DEPLOY_ROOT`.
+
+Local scripts remain the fallback for package, deploy, runtime status, diagnose, and rollback.
+
 ## Health Verification
 
 Health verification should check:

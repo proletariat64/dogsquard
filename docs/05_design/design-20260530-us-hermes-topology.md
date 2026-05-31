@@ -210,3 +210,16 @@ The protected host guard now rejects:
 - `43.130.49.185`
 
 No real deployment, runtime activation, reverse proxy change, nginx restart, or multica operation was performed on `us.hermes`.
+
+## Phase 6C-4 Workflow Hardening Warning
+
+`us.hermes` and `43.130.49.185` remain blocked by the Dev Deploy workflow guard.
+
+No Phase 6C workflow may target:
+
+- `us.hermes`
+- `43.130.49.185`
+- `proletariat.icu`
+- `www.proletariat.icu`
+
+Workflow rollback support does not change this boundary. Rollback is for the cn.ant development deploy root only.

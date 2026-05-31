@@ -175,11 +175,13 @@ For Milestone 6E, the intended split is:
 
 After 6E, move to one of:
 
-- `v0.1.0` release candidate
+- `v0.1.0` release candidate review
 - Milestone 7 Production Deployment Later
 - Milestone 8 Optional Hardening / Polish
 
 Do not create `6F`, `6G`, or `6H` unless the user explicitly defines a genuinely new milestone.
+
+After 6E-B, the next normal deliverable is the `v0.1.0` candidate review, not another 6E micro-phase.
 
 ## Anti-Patterns
 

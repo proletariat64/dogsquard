@@ -51,7 +51,7 @@ Without that boundary, future repositories may inherit example business logic, l
 
 ## Template Core
 
-Future Dogsquard initialization should copy or initialize this reusable core:
+Dogsquard initialization should copy or initialize this reusable core:
 
 - docs governance structure
 - Makefile and local scripts
@@ -95,7 +95,7 @@ Risk: bootstrap implementation becomes more complex.
 
 Recommended policy:
 
-Treat the example app as optional example and validation material, not mandatory business starter logic. Future implementation should prefer moving it under `examples/internal-task-intake` or making it selectable through an init option.
+Treat the example app as optional example and validation material, not mandatory business starter logic. The 6E-B implementation makes it selectable through `INCLUDE_EXAMPLE_APP=true`. Moving it under `examples/internal-task-intake` remains optional future cleanup.
 
 ## Agent-Local Files Policy
 
@@ -122,7 +122,7 @@ Recommended approach:
 
 ## Bootstrap Flow
 
-Future flow:
+Implemented flow:
 
 1. User manually creates a GitHub repo.
 2. User clones the repo locally.
@@ -133,17 +133,17 @@ Future flow:
 7. User opens first design issue.
 8. First PR validates local and CI gates.
 
-Possible future command:
+Bootstrap command:
 
 ```bash
 scripts/init-new-repo.sh <target-path>
 ```
 
-This PRD does not implement that command.
+The command defaults to dry-run mode and requires explicit `DRY_RUN=false` to copy files.
 
 ## Configuration Replacement
 
-Future initialization must handle placeholders for:
+Initialization must eventually handle placeholders for:
 
 - project name
 - app name

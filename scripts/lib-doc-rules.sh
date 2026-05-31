@@ -41,7 +41,7 @@ doc_rule_regex_for_file() {
     docs/05_design/*.md) echo '^design-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*\.md$' ;;
     docs/06_testing/*.md) echo '^test-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*\.md$' ;;
     docs/07_runbooks/*.md) echo '^runbook-[a-z0-9]+(-[a-z0-9]+)*\.md$' ;;
-    docs/08_releases/*.md) echo '^release-v[0-9]+\.[0-9]+\.[0-9]+\.md$' ;;
+    docs/08_releases/*.md) echo '^release-v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+)*\.md$' ;;
     *) echo "" ;;
   esac
 }
@@ -54,4 +54,3 @@ doc_rule_front_matter_block() {
     in_block { print }
   ' "$file"
 }
-

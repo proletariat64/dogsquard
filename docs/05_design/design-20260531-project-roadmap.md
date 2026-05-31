@@ -160,9 +160,9 @@ Result:
 
 Deliverables:
 
-- 6E-A Template Productization Design
-- 6E-B Template Finalization Implementation
-- optional `v0.1.0` release candidate
+- 6E-A Template Productization Design: done
+- 6E-B Template Finalization Implementation: in review
+- `v0.1.0` release candidate: next
 
 Scope:
 
@@ -172,6 +172,15 @@ Scope:
 - design and implement bootstrap/init flow
 - improve README as template entrypoint
 - define final local, CI, and dev-deploy checklist
+
+Expected 6E-B result:
+
+- README acts as the Dogsquard template entrypoint
+- bootstrap script initializes conservative template core
+- example app is optional material
+- dev deploy assets are optional material
+- agent-local files are excluded unless explicitly templated
+- `v0.1.0` candidate checklist is ready for review
 
 ### Milestone 7: Production Deployment Later
 
@@ -186,8 +195,5 @@ Includes:
 ## Open Questions
 
 - When should Dogsquard become a reusable template release?
-- Should agent-local files like `AGENTS.md`, `CLAUDE.md`, and `roster.md` be committed or ignored?
-- Should the example internal app move under `examples/` or become an init option?
-- Should the first bootstrap implementation be script-based, checklist-based, or both?
 - Do we need direct high-port access on `cn.ant` later?
 - Do we need a dev domain or subdomain later?

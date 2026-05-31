@@ -29,14 +29,59 @@ Explain how Dogsquard should be applied to new or existing repositories today, a
 
 ## Future Profile-based Bootstrap Process
 
-Future bootstrap should accept a profile:
+Profile-aware bootstrap now uses `scripts/bootstrap-project.sh`:
 
 ```bash
-PROJECT_TYPE=node scripts/init-new-repo.sh ../target-repo
-DRY_RUN=false PROJECT_TYPE=node scripts/init-new-repo.sh ../target-repo
+PROJECT_TYPE=node TARGET_DIR=../target-repo scripts/bootstrap-project.sh
+PROJECT_TYPE=node TARGET_DIR=../target-repo DRY_RUN=false scripts/bootstrap-project.sh
 ```
 
 Profiles should decide the Makefile, PR Quality Gate, validation commands, optional assets, and runtime placeholders.
+
+## Script Usage
+
+Dry-run is the default:
+
+```bash
+PROJECT_TYPE=node TARGET_DIR=../target-repo scripts/bootstrap-project.sh
+```
+
+Apply changes:
+
+```bash
+PROJECT_TYPE=node TARGET_DIR=../target-repo DRY_RUN=false scripts/bootstrap-project.sh
+```
+
+Create the target directory only when explicitly requested:
+
+```bash
+PROJECT_TYPE=docs-only TARGET_DIR=../target-repo CREATE_TARGET=true scripts/bootstrap-project.sh
+```
+
+Overwrite existing generated files only when explicitly requested:
+
+```bash
+PROJECT_TYPE=node TARGET_DIR=../target-repo DRY_RUN=false FORCE=true scripts/bootstrap-project.sh
+```
+
+Optional example app material remains opt-in:
+
+```bash
+PROJECT_TYPE=go-js TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/bootstrap-project.sh
+```
+
+Optional dev deploy material remains opt-in:
+
+```bash
+PROJECT_TYPE=go-js TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/bootstrap-project.sh
+```
+
+The Makefile wrapper is:
+
+```bash
+make bootstrap-dry-run TARGET=../target-repo PROJECT_TYPE=node
+make bootstrap-test
+```
 
 ## Choosing PROJECT_TYPE
 
@@ -51,7 +96,7 @@ Profiles should decide the Makefile, PR Quality Gate, validation commands, optio
 - Add Dogsquard docs governance.
 - Add issue and PR templates.
 - Generate npm-based Makefile commands.
-- Generate PR Quality Gate with Node setup and Node Quality job.
+- Generate PR Quality Gate with Shell Check, Repository Hygiene, Node Quality, and PR Quality Summary.
 - Add runtime placeholders such as `data/.gitkeep` only when needed.
 - Do not copy Dogsquard example app.
 - Do not copy dev deploy workflow by default.
@@ -62,6 +107,16 @@ Profiles should decide the Makefile, PR Quality Gate, validation commands, optio
 - Generate Go and frontend validation commands.
 - Keep Playwright smoke optional.
 - Keep dev deployment assets opt-in.
+- Generate PR Quality Gate with Shell Check, Repository Hygiene, Go/JS Quality, and PR Quality Summary.
+
+## PROJECT_TYPE=docs-only Expected Steps
+
+- Generate docs governance folders.
+- Copy the core governance documents required by `make doc-check`.
+- Generate doc-check and doc-guard scripts.
+- Generate documentation-only Makefile commands.
+- Generate PR Quality Gate with shell, repository hygiene, docs quality, and summary jobs.
+- Do not require Go, npm, Playwright, deployment, or runtime scripts.
 
 ## Preserve Existing Repo Content
 
@@ -105,6 +160,27 @@ bash -n scripts/*.sh
 ```
 
 For Go/JS projects, include Go backend tests and frontend build according to the generated Makefile.
+
+For docs-only projects:
+
+```bash
+make help
+make doc-check
+make doc-guard
+make release-check
+git diff --check
+bash -n scripts/*.sh
+```
+
+## Bootstrap Script Validation
+
+Dogsquard validates the profile-aware bootstrap behavior with:
+
+```bash
+make bootstrap-test
+```
+
+The test script creates temporary targets, exercises dry-run and apply mode, verifies existing README preservation, checks generated Makefile and PR Quality Gate files, verifies docs folders and core governance docs, runs `make doc-check` in generated docs-only and node targets, and confirms optional example app and dev deploy assets remain opt-in.
 
 ## Trial Repo Lessons
 

@@ -172,7 +172,7 @@ Deliverables:
 - 6E-B Template Finalization Implementation: done
 - `v0.1.0` release candidate and fresh-repo trial: done
 - Project Profiles and Bootstrap Strategy: current
-- Bootstrap Script PR with `PROJECT_TYPE=node`: next `v0.1.1` candidate
+- Bootstrap Script PR with `PROJECT_TYPE=node`, `PROJECT_TYPE=go-js`, and `PROJECT_TYPE=docs-only`: in progress
 
 Scope:
 
@@ -195,11 +195,15 @@ Current 6E result:
 
 `v0.1.1` candidate direction:
 
-- add `PROJECT_TYPE=node`
+- add profile-aware bootstrap through `scripts/bootstrap-project.sh`
+- support `PROJECT_TYPE=node`
+- support `PROJECT_TYPE=go-js`
+- support `PROJECT_TYPE=docs-only`
 - generate npm-based Makefile and PR Quality Gate
 - preserve existing README, `ddd/`, `spec/`, source, and tests
 - keep Dogsquard example app and dev deploy workflow opt-in
 - keep dry-run and overwrite safety as defaults
+- validate profile behavior with `make bootstrap-test`
 
 ### Milestone 7: Production Deployment Later
 

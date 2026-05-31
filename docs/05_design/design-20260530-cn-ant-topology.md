@@ -175,3 +175,25 @@ DEV_DEPLOY_ROOT
 ```
 
 No public route is exposed by the workflow.
+
+## Phase 6C-3 Workflow Validation Summary
+
+`cn.ant` has been validated as the automated dev deploy target for the `Dev Deploy` workflow.
+
+Sanitized result:
+
+- GitHub Environment `development` was configured with the expected deploy values.
+- Manual dry-run dispatch succeeded.
+- Manual real deploy dispatch succeeded.
+- Runtime restart and health passed after workflow deployment.
+- Local runtime status confirmed backend and frontend processes running from the remote deploy root.
+
+The active dev runtime remains isolated:
+
+- deploy root: `~/apps/dogsquard-dev`
+- backend: localhost port `18080`
+- frontend: localhost port `14173`
+
+No public route is configured yet.
+
+No reverse proxy integration is configured yet.

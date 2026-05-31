@@ -97,8 +97,8 @@ Required local validation:
 - `cd frontend && npm run build`
 - `make e2e-smoke`
 - `make package-release`
-- `make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
-- `make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev`
+- `make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'`
+- `make runtime-status HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'`
 
 The dev deploy workflow should not run from pull requests.
 
@@ -245,3 +245,27 @@ Workflow logs should not show:
 - workflow does not deploy to `us.hermes`
 - workflow does not expose a public URL
 - workflow rejects protected `us.hermes` and `proletariat.icu` targets
+
+## Phase 6C-3 Validation Results
+
+Phase 6C-3 validated the implemented workflow against the configured `development` environment.
+
+Sanitized results:
+
+- pull request behavior remains safe because `deploy-dev.yml` has no `pull_request` trigger
+- the first automatic `push` run after Phase 6C-2 failed at configuration validation because environment values were incomplete
+- environment values were completed for `DEV_HOST`, `DEV_USER`, `DEV_DEPLOY_ROOT`, `DEV_APP_NAME`, `DEV_BACKEND_PORT`, and `DEV_FRONTEND_PORT`
+- `DEV_SSH_KEY` was already present and was not printed or committed
+- manual dry-run dispatch with `dry_run=true` and `restart_runtime=false` succeeded
+- dry-run validated local quality, package creation, SSH setup, deploy planning, and safe runtime status
+- manual real dispatch with `dry_run=false` and `restart_runtime=true` succeeded
+- real dispatch deployed to `cn.ant`, restarted runtime, and passed runtime health
+- local runtime status confirmed the active release under the remote `~/apps/dogsquard-dev` deploy root
+- no public URL, reverse proxy route, Docker setup, production deploy, or `us.hermes` deploy was introduced
+
+Minimal workflow fixes from validation:
+
+- protected target guard now also rejects `43.130.49.185`
+- Go setup cache is disabled because this repository currently has no `go.sum`
+
+The workflow still has an upstream GitHub Actions annotation about Node.js 20 action runtime deprecation. That warning is from the currently used official actions and does not indicate a Dogsquard deployment failure.

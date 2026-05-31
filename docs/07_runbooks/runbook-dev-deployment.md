@@ -222,14 +222,16 @@ The command builds the Go backend, builds frontend static assets, and writes a `
 Run an opt-in dry-run deploy against a selected SSH target:
 
 ```bash
-make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Equivalent explicit form:
 
 ```bash
-make deploy-dev HOST=cn.ant DRY_RUN=true DEPLOY_ROOT=~/apps/dogsquard-dev
+make deploy-dev HOST=cn.ant DRY_RUN=true DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
+
+Quote `DEPLOY_ROOT='~/apps/dogsquard-dev'` when the path should expand on the remote host. Without quotes, the local shell may expand `~` before `make` runs.
 
 Dry-run mode uploads the artifact to the remote temporary artifact path, then prints the remote activation plan without creating release directories, extracting the artifact, or updating `current`.
 
@@ -238,7 +240,7 @@ Dry-run mode uploads the artifact to the remote temporary artifact path, then pr
 Actual deploy requires explicit `DRY_RUN=false`:
 
 ```bash
-make deploy-dev HOST=cn.ant DRY_RUN=false DEPLOY_ROOT=~/apps/dogsquard-dev
+make deploy-dev HOST=cn.ant DRY_RUN=false DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Do not run actual deploy against `us.hermes` unless the user explicitly approves the target and deploy root.
@@ -260,13 +262,13 @@ Phase 6B-2 validates manual artifact deployment without adding a GitHub Actions 
 Run `cn.ant` dry-run first:
 
 ```bash
-make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Run `cn.ant` real isolated deploy only after dry-run succeeds:
 
 ```bash
-make deploy-dev HOST=cn.ant DRY_RUN=false DEPLOY_ROOT=~/apps/dogsquard-dev
+make deploy-dev HOST=cn.ant DRY_RUN=false DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Check the remote layout:
@@ -288,7 +290,7 @@ Expected successful layout:
 Use `us.hermes` dry-run only:
 
 ```bash
-make deploy-dev-dry-run HOST=us.hermes DEPLOY_ROOT=~/apps/dogsquard-dev
+make deploy-dev-dry-run HOST=us.hermes DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Do not run `DRY_RUN=false` on `us.hermes` yet.
@@ -322,37 +324,37 @@ frontend: 127.0.0.1:14173
 Start runtime on `cn.ant` only:
 
 ```bash
-make runtime-start HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-start HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Check status:
 
 ```bash
-make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-status HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Check health:
 
 ```bash
-make runtime-health HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-health HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Stop runtime:
 
 ```bash
-make runtime-stop HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-stop HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Confirm stopped:
 
 ```bash
-make runtime-status HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-status HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 `us.hermes` runtime start and restart are blocked by default:
 
 ```bash
-make runtime-start HOST=us.hermes DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-start HOST=us.hermes DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Do not set `ALLOW_US_HERMES_RUNTIME=true` in Phase 6B-3.
@@ -386,15 +388,15 @@ Port occupied behavior:
 Logs:
 
 ```bash
-make runtime-logs HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
-make runtime-logs HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev COMPONENT=backend
-make runtime-logs HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev COMPONENT=frontend
+make runtime-logs HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
+make runtime-logs HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev' COMPONENT=backend
+make runtime-logs HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev' COMPONENT=frontend
 ```
 
 Diagnostics:
 
 ```bash
-make runtime-diagnose HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-diagnose HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 `diagnose` reports:
@@ -410,7 +412,7 @@ make runtime-diagnose HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
 Restart:
 
 ```bash
-make runtime-restart HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make runtime-restart HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Restart stops only Dogsquard pid-file processes and then starts from the current release.
@@ -418,7 +420,7 @@ Restart stops only Dogsquard pid-file processes and then starts from the current
 Rollback:
 
 ```bash
-make rollback-dev HOST=cn.ant TARGET_RELEASE=<release-id> DEPLOY_ROOT=~/apps/dogsquard-dev
+make rollback-dev HOST=cn.ant TARGET_RELEASE=<release-id> DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Rollback only switches the `current` symlink under `DEPLOY_ROOT`.
@@ -475,6 +477,21 @@ The future workflow should:
 Production remains a future phase.
 
 The local scripts remain the source of truth for artifact packaging, SSH deploy, runtime restart, health checks, diagnostics, and rollback.
+
+## Phase 6C-3 Workflow Validation
+
+Phase 6C-3 validated the GitHub workflow against the `development` environment.
+
+Sanitized result:
+
+- `workflow_dispatch` dry-run succeeded without restarting runtime
+- `workflow_dispatch` real deploy succeeded against `cn.ant`
+- runtime restart and health passed on `cn.ant`
+- local status confirmed backend and frontend running from `~/apps/dogsquard-dev`
+- the workflow still does not run from pull requests
+- `us.hermes`, `proletariat.icu`, `www.proletariat.icu`, and `43.130.49.185` remain protected targets
+
+Local scripts remain the fallback path if GitHub Actions is unavailable.
 
 ## Health Verification
 

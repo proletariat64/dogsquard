@@ -61,7 +61,7 @@ DEV_FRONTEND_PORT
 Suggested values:
 
 ```text
-DEV_HOST=cn.ant or actual hostname resolvable by GitHub runner
+DEV_HOST=47.103.65.82 or actual hostname resolvable by GitHub runner
 DEV_DEPLOY_ROOT=~/apps/dogsquard-dev or absolute user-writable path
 DEV_APP_NAME=dogsquard
 DEV_BACKEND_PORT=18080
@@ -152,9 +152,11 @@ Use these local commands first when debugging:
 
 ```bash
 make package-release
-make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
-make runtime-diagnose HOST=cn.ant DEPLOY_ROOT=~/apps/dogsquard-dev
+make deploy-dev-dry-run HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
+make runtime-diagnose HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
+
+Quote `DEPLOY_ROOT='~/apps/dogsquard-dev'` in local commands when the path should expand on the remote host. Without quotes, the local shell may expand `~` before `make` runs.
 
 In workflow logs, look for:
 
@@ -178,7 +180,7 @@ Diagnostics should not use `sudo`, edit server config, or dump secrets.
 Rollback remains explicit:
 
 ```bash
-make rollback-dev HOST=cn.ant TARGET_RELEASE=<release-id> DEPLOY_ROOT=~/apps/dogsquard-dev
+make rollback-dev HOST=cn.ant TARGET_RELEASE=<release-id> DEPLOY_ROOT='~/apps/dogsquard-dev'
 ```
 
 Do not rollback to an unverified release id.
@@ -189,10 +191,28 @@ Do not run rollback on `us.hermes` in this phase.
 
 - `DEV_HOST` must identify the `cn.ant` dev target or its real hostname/IP.
 - The local SSH alias `cn.ant` may not work from GitHub-hosted runners.
-- The workflow rejects `us.hermes`, `proletariat.icu`, and `www.proletariat.icu`.
+- The workflow rejects `us.hermes`, `proletariat.icu`, `www.proletariat.icu`, and `43.130.49.185`.
 - Do not configure `us.hermes` for dev deploy yet.
 - Do not expose a public URL yet.
 - Do not configure production.
 - Do not configure reverse proxy routes.
 - Do not add Docker or Docker Compose for Dogsquard.
 - Do not require `sudo`.
+
+## Phase 6C-3 Validation
+
+Phase 6C-3 validated the workflow behavior using the GitHub Environment `development`.
+
+Sanitized results:
+
+- the first automatic `push` run failed early because required environment values were incomplete
+- `DEV_HOST`, `DEV_USER`, and required variables were then configured without changing or exposing `DEV_SSH_KEY`
+- manual `workflow_dispatch` with `dry_run=true` and `restart_runtime=false` succeeded
+- dry-run packaged the release, configured SSH, ran deploy planning, and skipped runtime restart
+- manual `workflow_dispatch` with `dry_run=false` and `restart_runtime=true` succeeded
+- real workflow deploy activated a release on `cn.ant`, restarted runtime, and passed runtime health
+- local `runtime-status` confirmed backend and frontend processes running from `~/apps/dogsquard-dev`
+- no pull request deploy trigger was added
+- no `us.hermes`, `proletariat.icu`, or `43.130.49.185` deploy target was used
+
+GitHub-hosted workflow logs should be inspected for stage-level status only. Do not copy raw logs into repository docs if they contain paths, host details, or other sensitive operational data.

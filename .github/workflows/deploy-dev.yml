@@ -61,6 +61,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: backend/go.mod
+          cache: false
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -87,7 +88,7 @@ jobs:
 
           protected_host="$(printf '%s' "$DEV_HOST" | tr '[:upper:]' '[:lower:]')"
           case "$protected_host" in
-            us.hermes|*us.hermes*|proletariat.icu|www.proletariat.icu|*proletariat.icu*)
+            us.hermes|*us.hermes*|43.130.49.185|proletariat.icu|www.proletariat.icu|*proletariat.icu*)
               echo "Blocked: DEV_HOST targets protected host or domain." >&2
               echo "Phase 6C-2 dev deploy must target cn.ant only." >&2
               exit 1
@@ -207,7 +208,7 @@ jobs:
           fi
           protected_host="$(printf '%s' "$DEV_HOST" | tr '[:upper:]' '[:lower:]')"
           case "$protected_host" in
-            us.hermes|*us.hermes*|proletariat.icu|www.proletariat.icu|*proletariat.icu*)
+            us.hermes|*us.hermes*|43.130.49.185|proletariat.icu|www.proletariat.icu|*proletariat.icu*)
               echo "Skipping diagnostics for protected host."
               exit 0
               ;;

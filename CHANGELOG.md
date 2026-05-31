@@ -74,3 +74,8 @@
 - GitHub Actions SSH support in deploy/runtime scripts.
 - Dev deploy workflow runbook and test updates.
 - Safety guard rejecting us.hermes/proletariat.icu as dev workflow targets.
+- Dev Deploy workflow validation notes.
+- Dry-run workflow validation.
+- Real dev deploy workflow validation to cn.ant.
+- Protected target guard update for us.hermes IP.
+- Dev deploy workflow setup-go cache warning cleanup.

@@ -192,5 +192,21 @@ The dev deploy workflow explicitly rejects protected targets:
 - `us.hermes`
 - `proletariat.icu`
 - `www.proletariat.icu`
+- `43.130.49.185`
 
 The workflow must not deploy to `us.hermes`.
+
+## Phase 6C-3 Validation Summary
+
+`us.hermes` remains excluded from the Dev Deploy workflow.
+
+Phase 6C-3 validated deployment against `cn.ant`, not `us.hermes`.
+
+The protected host guard now rejects:
+
+- `us.hermes`
+- `proletariat.icu`
+- `www.proletariat.icu`
+- `43.130.49.185`
+
+No real deployment, runtime activation, reverse proxy change, nginx restart, or multica operation was performed on `us.hermes`.

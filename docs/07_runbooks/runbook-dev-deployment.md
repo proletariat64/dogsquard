@@ -518,6 +518,21 @@ Rollback uses the existing runtime wrapper and switches only the Dogsquard `curr
 
 Local scripts remain the fallback for package, deploy, runtime status, diagnose, and rollback.
 
+## Phase 6D Public Access Boundary
+
+Dev public access remains separate from dev deployment.
+
+The Dev Deploy workflow can deploy and start runtime while the app remains localhost-only on `cn.ant`.
+
+Phase 6D recommends SSH tunnel access as the first external validation path:
+
+```bash
+ssh -L 8173:127.0.0.1:14173 admin@47.103.65.82
+ssh -L 8180:127.0.0.1:18080 admin@47.103.65.82
+```
+
+No public URL, firewall change, runtime bind change, or reverse proxy change is added in Phase 6D.
+
 ## Health Verification
 
 Health verification should check:

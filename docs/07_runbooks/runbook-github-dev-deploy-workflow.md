@@ -290,3 +290,17 @@ Failure diagnostics:
 Artifact upload on failure is limited to packaged files under `dist/*.tar.gz` and uses `if-no-files-found: ignore`.
 
 Rerun failed jobs from the GitHub Actions UI only after confirming the configured `DEV_HOST` still points to the cn.ant target. Do not rerun after changing environment values toward `us.hermes` or any protected host.
+
+## Phase 6D Public Access Boundary
+
+The Dev Deploy workflow deploys, starts, restarts, rolls back, and health-checks the Dogsquard dev runtime.
+
+It does not expose a public URL.
+
+Public access is handled by Phase 6D and later design:
+
+- SSH tunnel first
+- optional high-port public exposure later
+- optional reverse proxy and HTTPS later
+
+The workflow must continue targeting `cn.ant` only.

@@ -84,3 +84,9 @@
 - Failure diagnostics hardening.
 - Workflow rollback dispatch support.
 - Dev deploy workflow runbook and test updates for Phase 6C-4.
+- Dev public access PRD.
+- Dev public access BDD.
+- ADR for staged cn.ant public access.
+- Dev public access test plan.
+- Dev public access runbook.
+- Topology notes for firewall allowed ports.

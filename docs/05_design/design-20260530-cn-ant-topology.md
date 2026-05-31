@@ -162,6 +162,32 @@ Phase 6C-4 hardens workflow validation and diagnostics but does not change the r
 
 Manual workflow rollback, when used, must target an explicit release id under the cn.ant deploy root.
 
+## Phase 6D Dev Public Access Design Notes
+
+User-provided firewall policy for `cn.ant` allows public access on:
+
+- `80`
+- `22`
+- `443`
+- `8000-8999`
+- ICMP / ping
+
+Current Dogsquard runtime remains localhost-only:
+
+- backend: `127.0.0.1:18080`
+- frontend: `127.0.0.1:14173`
+
+These runtime ports are not in the public firewall range and must not be assumed publicly reachable.
+
+Phase 6D prefers SSH tunnel validation first.
+
+Possible future direct public ports, if explicitly approved later:
+
+- frontend: `8173`
+- backend: `8180`
+
+No public exposure is implemented in Phase 6D.
+
 ## Phase 6C-1 Dev Workflow Design Note
 
 `cn.ant` is the preferred first GitHub Actions dev deploy target.

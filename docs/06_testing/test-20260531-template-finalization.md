@@ -114,6 +114,52 @@ Expected:
 - Dev Deploy workflow, deploy scripts, runtime scripts, and deployment docs are copied
 - the target repository still requires manual GitHub secret/variable review before any real deploy
 
+## v0.1.0 Fresh Repo Trial Results
+
+Trial date: 2026-05-31.
+
+### Default Bootstrap
+
+Result: passed.
+
+Validated:
+
+- dry-run writes no files
+- actual init copies template core
+- `backend/` and `frontend/` are excluded by default
+- `.git/`, `node_modules/`, `dist/`, `.env.local`, `.claude/`, local agent files, secrets, and raw server output are excluded
+- generated target passes `make help`, `make doc-check`, `make doc-guard`, and `make release-check`
+
+### Optional Example App
+
+Result: passed after one bootstrap fix.
+
+Validated:
+
+- `INCLUDE_EXAMPLE_APP=true` copies `backend/`, `frontend/`, smoke scripts, and example app docs
+- generated target excludes `node_modules`, `dist`, Playwright reports, test results, `.env.local`, and `.claude/`
+- generated target passes `make doc-check`, `make doc-guard`, `make release-check`, backend Go tests, and frontend install/build
+
+Fix applied:
+
+- `scripts/init-new-repo.sh` now filters generated and local-only paths during directory copies.
+
+### Optional Dev Deploy
+
+Result: passed.
+
+Validated:
+
+- `INCLUDE_DEV_DEPLOY=true` copies Dev Deploy workflow, deploy/runtime scripts, and deployment docs
+- generated target excludes secrets and local-only files
+- generated target passes `make doc-check`, `make doc-guard`, and `make release-check`
+
+### No Secrets Or Local-Only Files
+
+Result: passed.
+
+No generated target copied local untracked agent files, `.claude/`, `.env.local`, raw server output, private config, or secrets.
+
 ## Docs Check Validation
 
 Run:

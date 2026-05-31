@@ -111,3 +111,6 @@
 - Agent-local file policy.
 - v0.1.0 candidate notes.
 - Bootstrap runbook and test updates.
+- Fresh new-repo bootstrap trial.
+- v0.1.0 candidate validation notes.
+- Bootstrap directory-copy exclusion fix.

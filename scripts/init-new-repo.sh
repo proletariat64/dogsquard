@@ -112,7 +112,18 @@ copy_dir() {
   else
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     rm -rf "$TARGET_DIR/$dest"
-    cp -R "$ROOT_DIR/$src" "$TARGET_DIR/$dest"
+    mkdir -p "$TARGET_DIR/$dest"
+    tar \
+      --exclude='.git' \
+      --exclude='.claude' \
+      --exclude='node_modules' \
+      --exclude='dist' \
+      --exclude='playwright-report' \
+      --exclude='test-results' \
+      --exclude='.env.local' \
+      --exclude='*.local' \
+      -C "$ROOT_DIR/$src" \
+      -cf - . | tar -C "$TARGET_DIR/$dest" -xf -
   fi
 }
 

@@ -269,3 +269,56 @@ Minimal workflow fixes from validation:
 - Go setup cache is disabled because this repository currently has no `go.sum`
 
 The workflow still has an upstream GitHub Actions annotation about Node.js 20 action runtime deprecation. That warning is from the currently used official actions and does not indicate a Dogsquard deployment failure.
+
+## Phase 6C-4 Hardening Tests
+
+Phase 6C-4 adds workflow hardening while keeping cn.ant as the only dev deploy target.
+
+Configuration preflight tests:
+
+- missing `DEV_HOST` fails before SSH setup
+- missing `DEV_USER` fails before SSH setup
+- missing `DEV_SSH_KEY` fails before SSH setup
+- missing `DEV_DEPLOY_ROOT` fails before SSH setup
+- missing `DEV_APP_NAME` fails before SSH setup
+- missing `DEV_BACKEND_PORT` or `DEV_FRONTEND_PORT` fails before SSH setup
+- non-numeric runtime ports fail before SSH setup
+- logs show only present/missing names, not secret values
+
+Protected target guard tests:
+
+- empty `DEV_HOST` is blocked
+- `us.hermes` is blocked
+- `43.130.49.185` is blocked
+- `proletariat.icu` is blocked
+- `www.proletariat.icu` is blocked
+- `cn.ant` target hostname or IP is accepted
+
+Workflow behavior tests:
+
+- pull requests still run only PR Quality Gate, not Dev Deploy
+- push to `main` uses deploy mode with `dry_run=false` and `restart_runtime=true`
+- manual dispatch with `action=deploy`, `dry_run=true`, and `restart_runtime=false` still works
+- manual dispatch with `action=deploy`, `dry_run=false`, and `restart_runtime=true` still works
+- manual dispatch with `action=rollback` requires `target_release`
+- rollback skips package/upload and changes only the `current` symlink under `DEV_DEPLOY_ROOT`
+- rollback health runs only when `restart_runtime=true`
+
+Diagnostics tests:
+
+- failure diagnostics skip when SSH configuration is incomplete
+- failure diagnostics skip for protected targets
+- failure diagnostics run status, diagnose, and logs for safe cn.ant failures
+- diagnostic failures do not mask the original failure
+- diagnostics do not print secrets, raw environment dumps, or raw server config
+
+Rollback validation should use an explicit known release id only. Do not auto-select a release and do not run rollback on `us.hermes`.
+
+Phase 6C-4 acceptance criteria:
+
+- PR Quality Gate passes
+- Dev Deploy still does not run on pull requests
+- workflow syntax is valid
+- local scripts remain valid under `bash -n`
+- cn.ant dry-run and runtime diagnose still work locally
+- no production, public route, Docker, database, auth, or self-hosted runner behavior is added

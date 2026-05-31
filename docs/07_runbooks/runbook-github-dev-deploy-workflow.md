@@ -126,13 +126,24 @@ The workflow should not deploy from pull request branches.
 Manual dispatch inputs:
 
 - `deploy_ref`: optional Git ref to deploy. If omitted, the current workflow ref is used.
+- `action`: `"deploy"` or `"rollback"`. Push to `main` always uses `deploy`.
 - `dry_run`: `"true"` or `"false"`. Dry-run deploys the plan without activating a release.
 - `restart_runtime`: `"true"` or `"false"`. If false, deployment can complete without runtime restart or health check.
+- `target_release`: required only when `action=rollback`.
 
 For normal development deployment, use:
 
 ```text
+action=deploy
 dry_run=false
+restart_runtime=true
+```
+
+For rollback, use:
+
+```text
+action=rollback
+target_release=<release-id>
 restart_runtime=true
 ```
 
@@ -175,6 +186,8 @@ On failure, the workflow attempts safe diagnostics:
 
 Diagnostics should not use `sudo`, edit server config, or dump secrets.
 
+Do not paste full workflow logs into issues or docs. Summarize the failure stage, run URL, and sanitized error message instead.
+
 ## Manual Rollback
 
 Rollback remains explicit:
@@ -216,3 +229,64 @@ Sanitized results:
 - no `us.hermes`, `proletariat.icu`, or `43.130.49.185` deploy target was used
 
 GitHub-hosted workflow logs should be inspected for stage-level status only. Do not copy raw logs into repository docs if they contain paths, host details, or other sensitive operational data.
+
+## Phase 6C-4 Hardening
+
+Phase 6C-4 hardens `deploy-dev.yml` without changing the deployment target or exposing a public route.
+
+Configuration preflight now validates these names before SSH setup:
+
+- `DEV_HOST`
+- `DEV_USER`
+- `DEV_SSH_KEY`
+- `DEV_DEPLOY_ROOT`
+- `DEV_APP_NAME`
+- `DEV_BACKEND_PORT`
+- `DEV_FRONTEND_PORT`
+
+The workflow prints only whether each name is present or missing. It does not print secret values.
+
+The preflight also validates:
+
+- deploy action is `deploy` or `rollback`
+- `dry_run` is `true` or `false`
+- `restart_runtime` is `true` or `false`
+- backend and frontend ports are numeric
+- `target_release` is present when `action=rollback`
+
+Protected target guard rejects:
+
+- empty `DEV_HOST`
+- `us.hermes`
+- `43.130.49.185`
+- `proletariat.icu`
+- `www.proletariat.icu`
+- any host containing `us.hermes` or `proletariat.icu`
+
+Main push behavior:
+
+- push to `main` runs `action=deploy`
+- `dry_run=false`
+- `restart_runtime=true`
+- artifact is packaged, uploaded, activated, restarted, and health checked
+
+Manual dispatch behavior:
+
+- `action=deploy`, `dry_run=true`, `restart_runtime=false` validates package and remote deploy plan
+- `action=deploy`, `dry_run=false`, `restart_runtime=true` performs real cn.ant dev deploy and health check
+- `action=rollback` skips package/upload and switches `current` to explicit `target_release`
+- rollback restarts and health-checks runtime only when `restart_runtime=true`
+
+Failure diagnostics:
+
+- run only after failure
+- skip when SSH setup is incomplete
+- skip for protected targets
+- run runtime `status`, `diagnose`, and `logs`
+- continue even if an individual diagnostic command fails
+- do not use `sudo`
+- do not dump environment variables or server config
+
+Artifact upload on failure is limited to packaged files under `dist/*.tar.gz` and uses `if-no-files-found: ignore`.
+
+Rerun failed jobs from the GitHub Actions UI only after confirming the configured `DEV_HOST` still points to the cn.ant target. Do not rerun after changing environment values toward `us.hermes` or any protected host.

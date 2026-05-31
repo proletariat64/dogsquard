@@ -148,6 +148,20 @@ No public route is configured yet.
 
 No reverse proxy integration is configured yet.
 
+## Phase 6C-4 Workflow Hardening Summary
+
+`cn.ant` remains the only automated Dogsquard dev deploy target.
+
+Phase 6C-4 hardens workflow validation and diagnostics but does not change the runtime topology:
+
+- deploy root remains `~/apps/dogsquard-dev`
+- backend remains localhost-only on port `18080`
+- frontend remains localhost-only on port `14173`
+- public routing remains unconfigured
+- reverse proxy integration remains unconfigured
+
+Manual workflow rollback, when used, must target an explicit release id under the cn.ant deploy root.
+
 ## Phase 6C-1 Dev Workflow Design Note
 
 `cn.ant` is the preferred first GitHub Actions dev deploy target.

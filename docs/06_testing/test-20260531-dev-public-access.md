@@ -71,6 +71,34 @@ Expected:
 - Internal Task Intake frontend loads
 - no public DNS or reverse proxy is involved
 
+## Milestone 6D Validation Results
+
+Milestone 6D validated the SSH tunnel access path against `cn.ant`.
+
+Validated checks:
+
+- runtime status checked with `make runtime-status HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'`
+- runtime health checked with `make runtime-health HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'`
+- combined SSH tunnel opened for frontend and backend local ports
+- backend health validated through `http://127.0.0.1:8180/healthz`
+- frontend access validated through `http://127.0.0.1:8173`
+
+Sanitized result:
+
+- backend health through the tunnel returned HTTP 200 with JSON health response
+- frontend through the tunnel returned HTTP 200 and the `Internal Task Intake` HTML
+- no firewall changes were made
+- no public URL was exposed
+- no reverse proxy configuration was changed
+- no runtime port binding was changed
+- `us.hermes` was not touched
+
+Decision result:
+
+- SSH tunnel is enough for current dev validation.
+- Direct high-port public access remains future optional work.
+- Reverse proxy and HTTPS remain future optional work.
+
 ## Public High-Port Validation Future Plan
 
 If direct high-port public access is approved later:

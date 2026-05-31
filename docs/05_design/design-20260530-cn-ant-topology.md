@@ -5,7 +5,7 @@ status: "draft"
 owner: "user"
 source: "user"
 created: "2026-05-30"
-updated: "2026-05-30"
+updated: "2026-05-31"
 related_issue: "#1"
 related_pr: ""
 supersedes: ""
@@ -187,6 +187,29 @@ Possible future direct public ports, if explicitly approved later:
 - backend: `8180`
 
 No public exposure is implemented in Phase 6D.
+
+## Milestone 6D Dev Access Stabilization Summary
+
+SSH tunnel dev access was validated against `cn.ant`.
+
+Validated tunnel mappings:
+
+- local frontend `127.0.0.1:8173` -> `127.0.0.1:14173` on `cn.ant`
+- local backend `127.0.0.1:8180` -> `127.0.0.1:18080` on `cn.ant`
+
+Sanitized result:
+
+- backend health returned HTTP 200 through the tunnel
+- frontend returned the `Internal Task Intake` HTML through the tunnel
+- current runtime remains localhost-only on `cn.ant`
+- no public route is configured
+- no firewall, reverse proxy, or runtime binding change was made
+
+Current recommendation:
+
+- use SSH tunnel access for human dev validation
+- defer direct public high-port access until there is a clear need
+- defer reverse proxy and HTTPS until a separate route strategy is approved
 
 ## Phase 6C-1 Dev Workflow Design Note
 

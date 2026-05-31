@@ -19,6 +19,8 @@ This document stores the detailed roadmap and project history for Dogsquard.
 
 Issue #1 stores the one-screen dashboard: current milestone, objective, capability map, decisions, open questions, guardrails, latest completed work, and next deliverable.
 
+The Issue #1 dashboard should use checkbox/todo style with green, yellow, and red status indicators. It should show a high-level capability map while breaking down only the next two or three deliverables into actionable task detail.
+
 The roadmap should preserve the full project picture without turning Issue #1 into a historical changelog.
 
 ## Current Product Definition

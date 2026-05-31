@@ -42,6 +42,18 @@ Issue #1 should include:
 
 The Control Board should be compact enough to read quickly and complete enough to show where the project stands.
 
+## Checklist And Status Style
+
+Issue #1 should use checkbox and todo-list formatting.
+
+Use these status indicators:
+
+- 🟢 Done, healthy, or low risk
+- 🟡 Active, pending, or needing attention
+- 🔴 Blocked, risky, or not to touch without explicit approval
+
+The overall project picture should stay high level. Only the next two or three deliverables should be broken down into actionable checklist detail.
+
 ## Balance
 
 Too much:
@@ -62,6 +74,10 @@ Too little:
 Correct:
 
 - one-screen full-picture dashboard
+- checkbox and todo-list style
+- green, yellow, and red status indicators
+- high-level capability map
+- actionable detail for only the next two or three deliverables
 - roadmap docs for detail
 
 ## When To Update Issue #1

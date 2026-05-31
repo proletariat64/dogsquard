@@ -114,3 +114,9 @@
 - Fresh new-repo bootstrap trial.
 - v0.1.0 candidate validation notes.
 - Bootstrap directory-copy exclusion fix.
+- Project Profiles PRD.
+- ADR for profile-based bootstrap.
+- Project profiles test plan.
+- Project bootstrap runbook.
+- dogpdteamreport trial findings.
+- Roadmap and Control Board update for Template Finalization.

@@ -92,6 +92,14 @@ Dogsquard exists to make future internal app repositories easier to initialize, 
 - reverse proxy and HTTPS option deferred
 - no public URL exposed yet
 
+### 7. Template Finalization and Real-world Trial
+
+- Dogsquard `v0.1.0` released
+- fresh new-repo bootstrap trial passed
+- `dogpdteamreport` real-world trial applied Dogsquard governance to a Node/Express app
+- trial evidence showed project profiles are needed
+- `PROJECT_TYPE=node` identified as the first `v0.1.1` candidate
+
 ## Key Infrastructure Decisions
 
 - `cn.ant` is the first dev deploy target.
@@ -156,13 +164,15 @@ Result:
 
 ### Milestone 6E: Template Finalization
 
-6E should remain bounded to design and implementation. Do not create 6F, 6G, or 6H unless a genuinely new milestone is needed.
+6E should remain bounded to template finalization and project-profile strategy. Do not create command-sized micro-milestones.
 
 Deliverables:
 
 - 6E-A Template Productization Design: done
-- 6E-B Template Finalization Implementation: in review
-- `v0.1.0` release candidate: next
+- 6E-B Template Finalization Implementation: done
+- `v0.1.0` release candidate and fresh-repo trial: done
+- Project Profiles and Bootstrap Strategy: current
+- Bootstrap Script PR with `PROJECT_TYPE=node`: next `v0.1.1` candidate
 
 Scope:
 
@@ -172,15 +182,24 @@ Scope:
 - design and implement bootstrap/init flow
 - improve README as template entrypoint
 - define final local, CI, and dev-deploy checklist
+- define project-type profiles for adoption into existing repos
 
-Expected 6E-B result:
+Current 6E result:
 
 - README acts as the Dogsquard template entrypoint
 - bootstrap script initializes conservative template core
 - example app is optional material
 - dev deploy assets are optional material
 - agent-local files are excluded unless explicitly templated
-- `v0.1.0` candidate checklist is ready for review
+- real-world Node trial identified profile-aware bootstrap as the next improvement
+
+`v0.1.1` candidate direction:
+
+- add `PROJECT_TYPE=node`
+- generate npm-based Makefile and PR Quality Gate
+- preserve existing README, `ddd/`, `spec/`, source, and tests
+- keep Dogsquard example app and dev deploy workflow opt-in
+- keep dry-run and overwrite safety as defaults
 
 ### Milestone 7: Production Deployment Later
 

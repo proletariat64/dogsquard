@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev init-new-repo backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev init-new-repo bootstrap-dry-run bootstrap-test backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -28,6 +28,8 @@ help:
 	@echo "  make runtime-diagnose HOST=<ssh-target> Run remote runtime diagnostics"
 	@echo "  make rollback-dev HOST=<ssh-target> TARGET_RELEASE=<id> Switch remote current symlink"
 	@echo "  make init-new-repo TARGET=<path> [DRY_RUN=false] [INCLUDE_EXAMPLE_APP=true] [INCLUDE_DEV_DEPLOY=true]"
+	@echo "  make bootstrap-dry-run TARGET=<path> PROJECT_TYPE=node|go-js|docs-only"
+	@echo "  make bootstrap-test Run profile-aware bootstrap script tests"
 	@echo "  make backend-dev   Run the example Go backend"
 	@echo "  make frontend-dev  Run the example frontend dev server"
 	@echo "  make release-check Run doc-check, lint, test, and frontend build"
@@ -201,6 +203,16 @@ init-new-repo:
 		exit 2; \
 	fi; \
 	./scripts/init-new-repo.sh "$$TARGET"
+
+bootstrap-dry-run:
+	@if [[ -z "$${TARGET:-}" || -z "$${PROJECT_TYPE:-}" ]]; then \
+		echo "Usage: make bootstrap-dry-run TARGET=../new-project PROJECT_TYPE=node|go-js|docs-only"; \
+		exit 2; \
+	fi; \
+	TARGET_DIR="$$TARGET" DRY_RUN=true ./scripts/bootstrap-project.sh
+
+bootstrap-test:
+	@./scripts/test-bootstrap-project.sh
 
 backend-dev:
 	@cd backend && go run ./cmd/server

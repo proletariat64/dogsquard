@@ -38,10 +38,10 @@ The user, as a solo developer using agent-heavy vibe coding.
 
 ## Non-goals
 
-- No implementation script in this PR.
-- No production deploy.
-- No modifying the `dogpdteamreport` trial repo.
-- No public template release yet.
+- No production deployment.
+- No trial repository modification.
+- No public template release.
+- No server, runtime, or deployment behavior changes.
 
 ## Profiles
 
@@ -159,6 +159,13 @@ Profiles may need safe placeholders for ignored runtime directories. For Node re
 - Profiles are documented.
 - Node profile requirements are clear.
 - Go/JS profile requirements are clear.
+- Docs-only profile requirements are clear.
+- `scripts/bootstrap-project.sh` supports `PROJECT_TYPE=node`, `PROJECT_TYPE=go-js`, and `PROJECT_TYPE=docs-only`.
+- Bootstrap dry-run is available and safe by default.
+- Existing files are preserved unless `FORCE=true`.
+- Generated Makefile and PR Quality Gate are profile-appropriate.
+- Example app and dev deploy assets remain opt-in.
+- Bootstrap behavior is covered by `make bootstrap-test`.
 - Bootstrap strategy avoids destructive overwrite.
 - `dogpdteamreport` trial findings are captured.
 - `v0.1.1` direction is clear.

@@ -120,3 +120,8 @@
 - Project bootstrap runbook.
 - dogpdteamreport trial findings.
 - Roadmap and Control Board update for Template Finalization.
+- Profile-aware bootstrap script.
+- `PROJECT_TYPE=node`, `PROJECT_TYPE=go-js`, and `PROJECT_TYPE=docs-only` bootstrap support.
+- Bootstrap dry-run and no-overwrite safety defaults.
+- Bootstrap test script and Makefile target.
+- Project bootstrap runbook and project profile test plan updates.

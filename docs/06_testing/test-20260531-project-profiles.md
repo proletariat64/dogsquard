@@ -47,6 +47,7 @@ Validation passed:
 - `make release-check` passes in a Node repo without Go or Dogsquard example app directories.
 - Existing `ddd/`, `spec/`, source, and tests are preserved.
 - Runtime placeholders such as `data/.gitkeep` are created only when needed.
+- `scripts/bootstrap-project.sh` does not create `backend/` or `frontend/` unless `INCLUDE_EXAMPLE_APP=true`.
 
 ## Expected Validation for PROJECT_TYPE=go-js
 
@@ -82,3 +83,24 @@ Validation passed:
 - `PROJECT_TYPE=go-js` Dogsquard-style target still passes existing Dogsquard validation.
 - `PROJECT_TYPE=docs-only` target passes without app source.
 - Default bootstrap remains conservative and non-destructive.
+
+## Bootstrap Script Validation Results
+
+Implemented validation command:
+
+```bash
+make bootstrap-test
+```
+
+Validation coverage:
+
+- `docs-only` dry-run does not write files.
+- `docs-only` apply generates Makefile, PR Quality Gate, docs folders, and doc scripts.
+- `docs-only` apply includes core governance docs and passes `make doc-check`.
+- `node` apply preserves existing README, source, tests, and package files.
+- `node` apply generates npm-based Makefile and Node Quality workflow.
+- `node` apply creates `data/.gitkeep` when runtime-data signals are present.
+- `node` apply includes core governance docs and passes `make doc-check`.
+- `go-js` apply generates Go/JS Makefile and Go/JS Quality workflow.
+- `INCLUDE_EXAMPLE_APP=true` copies `backend/` and `frontend/` while excluding `node_modules` and build output.
+- `INCLUDE_DEV_DEPLOY=true` copies dev deploy workflow/scripts only when requested.

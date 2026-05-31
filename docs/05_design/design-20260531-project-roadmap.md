@@ -143,11 +143,14 @@ Validation details can be summarized in the PR body and relevant test docs rathe
 
 ### Milestone 6D: Dev Access Stabilization
 
-Includes:
+Status: in review.
 
-- SSH tunnel validation
-- decide whether direct high-port public access is needed
-- update dev access docs
+Result:
+
+- SSH tunnel access validated for `cn.ant`
+- SSH tunnel is the current recommended dev access mode
+- direct high-port public access remains optional future work
+- reverse proxy and HTTPS remain optional future work
 - no `us.hermes`
 - no production
 

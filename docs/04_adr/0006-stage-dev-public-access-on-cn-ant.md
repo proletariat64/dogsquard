@@ -49,6 +49,8 @@ Do not expose Dogsquard publicly in Phase 6D.
 - direct public ports and reverse proxy remain future explicit phases
 - `us.hermes` remains excluded
 - no firewall, reverse proxy, or runtime binding changes are made in this phase
+- Milestone 6D validated SSH tunnel access as the first access mode
+- tunnel-only access is sufficient for current human dev validation
 
 ## Alternatives Considered
 

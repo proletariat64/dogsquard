@@ -96,3 +96,6 @@
 - One-screen full-picture Control Board policy.
 - Checkbox/todo Control Board status style.
 - PR granularity rules.
+- Dev access stabilization.
+- SSH tunnel validation for cn.ant frontend and backend.
+- Decision to keep direct high-port and reverse proxy access deferred.

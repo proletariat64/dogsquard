@@ -5,7 +5,7 @@ status: "draft"
 owner: "user"
 source: "user"
 created: "2026-05-30"
-updated: "2026-05-30"
+updated: "2026-05-31"
 related_issue: "#1"
 related_pr: ""
 supersedes: ""
@@ -244,3 +244,13 @@ Dogsquard dev public access must not use:
 - `www.proletariat.icu/api`
 
 No public access through `us.hermes` is designed or implemented in Phase 6D.
+
+## Milestone 6D Dev Access Stabilization Note
+
+Milestone 6D validated Dogsquard dev access through SSH tunnels to `cn.ant`.
+
+`us.hermes` was not touched.
+
+Dogsquard dev access remains `cn.ant`-only.
+
+No real deploy, runtime activation, reverse proxy change, nginx restart, firewall change, or multica operation was performed on `us.hermes`.

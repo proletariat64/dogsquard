@@ -77,6 +77,51 @@ Open or curl:
 http://127.0.0.1:8180/healthz
 ```
 
+## Combined Tunnel Command
+
+The frontend and backend tunnels can be opened in one SSH session:
+
+```bash
+ssh \
+  -L 8173:127.0.0.1:14173 \
+  -L 8180:127.0.0.1:18080 \
+  admin@47.103.65.82
+```
+
+## Milestone 6D Validation Result
+
+Milestone 6D validated SSH tunnel access from the local workstation to `cn.ant`.
+
+Runtime status and health were checked first:
+
+```bash
+make runtime-status HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
+make runtime-health HOST=cn.ant DEPLOY_ROOT='~/apps/dogsquard-dev'
+```
+
+Validated tunnel checks:
+
+```bash
+curl -i http://127.0.0.1:8180/healthz
+curl -I http://127.0.0.1:8173
+curl http://127.0.0.1:8173
+```
+
+Sanitized result:
+
+- backend health through the tunnel returned HTTP 200 and `{"status":"ok"}`
+- frontend through the tunnel returned HTTP 200 with the `Internal Task Intake` HTML
+- no firewall changes were made
+- no public URL was exposed
+- no reverse proxy or HTTPS configuration was changed
+- `us.hermes` was not touched
+
+Decision:
+
+- SSH tunnel access is enough for current human dev validation.
+- Direct public high-port exposure is deferred until there is a clear need.
+- Reverse proxy and HTTPS access remain future work.
+
 ## Stop Runtime After Validation
 
 If desired:
@@ -105,7 +150,9 @@ Candidate ports:
 - frontend: `8173`
 - backend: `8180`
 
-This would require an explicit implementation phase and safety review.
+This remains deferred after Milestone 6D because SSH tunnel validation is sufficient for now.
+
+Any direct high-port exposure would require an explicit implementation phase and safety review.
 
 ## Future Reverse Proxy Approach
 

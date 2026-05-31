@@ -51,22 +51,77 @@ The candidate does not include:
 
 ## Readiness Checklist
 
-- [ ] Control Board dashboard is current.
-- [ ] Roadmap reflects completed capability groups and next milestone.
-- [ ] README explains how to use Dogsquard.
-- [ ] Template inventory is complete enough for bootstrap review.
-- [ ] `scripts/init-new-repo.sh` dry-run works.
-- [ ] `scripts/init-new-repo.sh` actual copy works in a temporary target.
-- [ ] Example app is optional, not mandatory.
-- [ ] Dev deploy files are optional, not mandatory.
-- [ ] Agent-local file policy is documented and enforced.
-- [ ] `make doc-check` passes.
-- [ ] `make doc-guard` passes.
-- [ ] `make release-check` passes.
-- [ ] `make e2e-smoke` passes.
-- [ ] `make package-release` passes.
-- [ ] No secrets or raw server output are committed.
-- [ ] Production remains explicitly future.
+- [x] Control Board dashboard is current.
+- [x] Roadmap reflects completed capability groups and next milestone.
+- [x] README explains how to use Dogsquard.
+- [x] Template inventory is complete enough for bootstrap review.
+- [x] `scripts/init-new-repo.sh` dry-run works.
+- [x] `scripts/init-new-repo.sh` actual copy works in a temporary target.
+- [x] Example app is optional, not mandatory.
+- [x] Dev deploy files are optional, not mandatory.
+- [x] Agent-local file policy is documented and enforced.
+- [x] `make doc-check` passes.
+- [x] `make doc-guard` passes.
+- [x] `make release-check` passes.
+- [x] `make e2e-smoke` passes.
+- [x] `make package-release` passes.
+- [x] No secrets or raw server output are committed.
+- [x] Production remains explicitly future.
+
+## Fresh New-Repo Trial
+
+Trial date: 2026-05-31.
+
+### Default Bootstrap Result
+
+Validated:
+
+- default dry-run printed planned actions and wrote no files
+- `DRY_RUN=false` copied template core into a temporary target
+- generated target included README, CHANGELOG, Makefile, `.env.example`, docs structure, local doc scripts, GitHub templates, and PR Quality Gate workflow
+- generated target did not include `backend/`, `frontend/`, `.git/`, `node_modules/`, `dist/`, `.env.local`, `.claude/`, `AGENTS.md`, `CLAUDE.md`, `roster.md`, secrets, or raw server output
+- generated target passed:
+  - `make help`
+  - `make doc-check`
+  - `make doc-guard`
+  - `make release-check`
+
+### Optional Example App Result
+
+Validated:
+
+- `INCLUDE_EXAMPLE_APP=true` copied `backend/`, `frontend/`, API smoke script, e2e smoke script, and example app docs
+- generated example target excluded generated/local-only files such as `node_modules`, `dist`, Playwright reports, `.env.local`, and `.claude/`
+- generated example target passed:
+  - `make doc-check`
+  - `make doc-guard`
+  - `make release-check`
+  - `cd backend && go test ./...`
+  - `cd frontend && npm install && npm run build`
+
+### Optional Dev Deploy Result
+
+Validated:
+
+- `INCLUDE_DEV_DEPLOY=true` copied Dev Deploy workflow, package/deploy/runtime scripts, and deployment docs
+- generated deploy target excluded secrets and local-only files
+- generated deploy target passed:
+  - `make doc-check`
+  - `make doc-guard`
+  - `make release-check`
+
+### Issues Found
+
+- The first optional example-app trial copied generated frontend artifacts from the working tree.
+- The bootstrap directory-copy helper was fixed to exclude `.git`, `.claude`, `node_modules`, `dist`, Playwright reports, test results, `.env.local`, and `*.local` when copying directories.
+
+### Remaining Blockers
+
+No v0.1.0 blockers remain from the fresh local bootstrap trial.
+
+### Recommendation
+
+Dogsquard is ready for `v0.1.0` tagging from the local bootstrap-trial perspective after this validation PR is reviewed and merged.
 
 ## Known Limitations
 

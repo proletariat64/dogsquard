@@ -84,6 +84,8 @@ The bootstrap must not copy:
 - `node_modules/`
 - `dist/`
 - `frontend/dist/`
+- `playwright-report/`
+- `test-results/`
 - `.env.local`
 - `.claude/`
 - private SSH config or keys
@@ -91,6 +93,8 @@ The bootstrap must not copy:
 - secrets
 - local machine-specific files
 - deployment artifacts or tarballs
+
+Directory copy operations also filter generated and local-only paths inside optional assets, so optional example app copies do not bring along `frontend/node_modules`, `frontend/dist`, Playwright reports, or test results from the Dogsquard working tree.
 
 ## Local-Only Files Policy
 

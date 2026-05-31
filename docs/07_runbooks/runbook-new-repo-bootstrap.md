@@ -77,6 +77,8 @@ The default bootstrap copies or initializes:
 - CHANGELOG template
 - `.env.example`
 
+Directory copies intentionally exclude generated and local-only paths such as `.git/`, `.claude/`, `node_modules/`, `dist/`, Playwright reports, test results, `.env.local`, and `*.local`.
+
 ## Optional Example App Include
 
 The Internal Task Intake app is example and validation material, not mandatory business starter logic.

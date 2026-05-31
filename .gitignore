@@ -1,4 +1,7 @@
 dist/
+.claude/
+*.local
+.env.local
 frontend/dist/
 frontend/node_modules/
 frontend/playwright-report/

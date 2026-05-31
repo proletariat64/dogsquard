@@ -53,10 +53,9 @@ The Internal Task Intake example app remains useful for Dogsquard validation and
 
 It should not be mandatory business starter logic for every generated repository.
 
-Future implementation should either:
+The 6E-B implementation makes it optional through the bootstrap/init flow with `INCLUDE_EXAMPLE_APP=true`.
 
-- move it under `examples/internal-task-intake`, or
-- make it optional through the bootstrap/init flow.
+Moving it under `examples/internal-task-intake` remains possible future cleanup.
 
 ## Agent-Local File Decision
 

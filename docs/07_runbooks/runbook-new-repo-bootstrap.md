@@ -15,9 +15,9 @@ supersedes: ""
 
 ## Purpose
 
-Describe the expected future workflow for applying Dogsquard to a newly created repository.
+Describe the workflow for applying Dogsquard to a newly created repository.
 
-This runbook is preparatory. The bootstrap implementation is pending.
+Dogsquard now provides a conservative bootstrap script. The script initializes the reusable process, documentation, local command, and GitHub template foundation. Optional example app and dev deploy assets must be explicitly requested.
 
 ## Expected Future Workflow
 
@@ -48,23 +48,58 @@ cd <new-repo>
 
 ## Apply Dogsquard Bootstrap
 
-Future implementation may provide:
+From the Dogsquard repository, run a dry-run first:
 
 ```bash
 scripts/init-new-repo.sh <target-path>
 ```
 
-The bootstrap should copy or initialize:
+Apply the bootstrap after reviewing the planned actions:
+
+```bash
+DRY_RUN=false scripts/init-new-repo.sh <target-path>
+```
+
+If the target already contains files, the script skips existing paths by default. Only overwrite existing files when intentional:
+
+```bash
+DRY_RUN=false FORCE=true scripts/init-new-repo.sh <target-path>
+```
+
+The default bootstrap copies or initializes:
 
 - docs governance structure
 - Makefile and scripts
 - `.github` issue and PR templates
 - PR Quality Gate workflow
-- configurable Dev Deploy workflow template
 - Control Board and roadmap docs
 - README template
 - CHANGELOG template
 - `.env.example`
+
+## Optional Example App Include
+
+The Internal Task Intake app is example and validation material, not mandatory business starter logic.
+
+Copy it only when useful:
+
+```bash
+DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/init-new-repo.sh <target-path>
+```
+
+This copies `backend/`, `frontend/`, API/e2e smoke scripts, and example app design/test/runbook docs.
+
+## Optional Dev Deploy Include
+
+Dev deploy assets are optional because many new repos will not be ready to deploy immediately.
+
+Copy them only after the target repository needs the cn.ant-style dev deploy pattern:
+
+```bash
+DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/init-new-repo.sh <target-path>
+```
+
+This copies the Dev Deploy workflow, packaging/deploy/runtime scripts, and deployment docs. The generated repository must still configure GitHub secrets, variables, target hosts, deploy roots, and protected-host rules before any real deploy.
 
 ## Review Generated Files
 
@@ -77,6 +112,8 @@ After bootstrap, the user should review:
 - development deploy settings
 - generated Control Board content
 - README and CHANGELOG starting content
+- whether example app files should remain
+- whether dev deploy files should remain
 
 ## Configure GitHub Labels And Templates
 
@@ -114,6 +151,24 @@ bash -n scripts/*.sh
 
 Additional backend/frontend/e2e checks depend on whether the example app or real product app is present.
 
+## Create Control Board In Target Repo
+
+Create Issue #1 in the target repository using the one-screen Control Board style.
+
+Start with:
+
+- Current Milestone
+- Current Objective
+- Capability Map
+- Now / Next / Later
+- Current Decisions
+- Open Questions
+- Guardrails
+- Latest Completed
+- Next Deliverable
+
+Keep detailed history in roadmap docs, not in the issue body.
+
 ## Open First Control Board
 
 Create or update the project Control Board issue.
@@ -135,6 +190,17 @@ The first product-specific issue should define the business direction.
 
 Agents must not invent that direction.
 
+## Open First PR
+
+The first PR should prove that the initialized repository works:
+
+- docs pass
+- local commands run
+- PR template is usable
+- PR Quality Gate can run
+- no secrets were copied
+- business direction remains user-owned
+
 ## What Not To Copy Blindly
 
 Do not blindly copy:
@@ -146,12 +212,12 @@ Do not blindly copy:
 - production host settings
 - `cn.ant` or `us.hermes` assumptions
 - example app business meaning
+- Dogsquard-specific host assumptions unless dev deploy was intentionally included and reviewed
 
-## Known Future Implementation Pending
+## Known Future Improvements
 
-- bootstrap script or checklist implementation
-- example app inclusion/exclusion mechanism
 - placeholder replacement
-- README template finalization
-- agent-local file template/ignore policy
-- `v0.1.0` readiness validation
+- generated first Control Board body
+- optional template profiles
+- label automation
+- stricter target repository validation

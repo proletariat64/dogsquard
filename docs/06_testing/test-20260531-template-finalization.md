@@ -15,13 +15,13 @@ supersedes: ""
 
 ## Objective
 
-Define how to validate future Dogsquard template finalization and new-repo bootstrap implementation.
+Define how to validate Dogsquard template finalization and new-repo bootstrap implementation.
 
-This test plan supports 6E-B implementation. It does not implement bootstrap behavior.
+This test plan supports 6E-B implementation.
 
-## Test Strategy For Future Init Implementation
+## Test Strategy
 
-Future implementation should be tested against a fresh local repository so Dogsquard can prove it initializes a usable project without relying on current repo state.
+The bootstrap should be tested against temporary local target directories so Dogsquard can prove it initializes a usable project without relying on current repo state.
 
 Validation should cover:
 
@@ -38,18 +38,81 @@ Validation should cover:
 
 Test flow:
 
-1. Create a temporary empty git repository.
+1. Create a temporary empty directory.
 2. Run the Dogsquard bootstrap/init process.
 3. Inspect generated files.
-4. Commit generated output in the temporary repo.
-5. Run local validation commands.
-6. Confirm the generated repo can open a first Control Board and first design issue.
+4. Confirm excluded files are not copied.
+5. Confirm optional files are copied only when requested.
+6. Confirm the generated repo has enough docs to open a first Control Board and first design issue.
 
 Expected:
 
 - core template files exist
 - project-specific placeholders are replaced or clearly marked for review
 - no private Dogsquard local state is copied
+
+## 6E-B Implementation Validation
+
+Dry-run validation:
+
+```bash
+tmp_target="$(mktemp -d)"
+scripts/init-new-repo.sh "$tmp_target"
+```
+
+Expected:
+
+- planned actions are printed
+- no files are written to the target
+- default excludes example app and dev deploy assets
+
+Actual init validation:
+
+```bash
+DRY_RUN=false scripts/init-new-repo.sh "$tmp_target"
+find "$tmp_target" -maxdepth 3 -type f | sort | head -200
+```
+
+Expected:
+
+- core docs, scripts, Makefile, `.github` templates, README starter, changelog starter, and `.env.example` are present
+- `backend/` and `frontend/` are not copied by default
+- `.git/`, `node_modules/`, `dist/`, `.env.local`, `.claude/`, raw server output, and secrets are not copied
+
+No-overwrite validation:
+
+```bash
+DRY_RUN=false scripts/init-new-repo.sh "$tmp_target"
+```
+
+Expected:
+
+- existing files are skipped
+- no overwrite happens unless `FORCE=true`
+
+Optional example app validation:
+
+```bash
+tmp_example="$(mktemp -d)"
+DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/init-new-repo.sh "$tmp_example"
+```
+
+Expected:
+
+- `backend/` and `frontend/` are copied
+- example app docs and smoke scripts are copied
+
+Optional dev deploy validation:
+
+```bash
+tmp_deploy="$(mktemp -d)"
+DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/init-new-repo.sh "$tmp_deploy"
+```
+
+Expected:
+
+- Dev Deploy workflow, deploy scripts, runtime scripts, and deployment docs are copied
+- the target repository still requires manual GitHub secret/variable review before any real deploy
 
 ## Docs Check Validation
 

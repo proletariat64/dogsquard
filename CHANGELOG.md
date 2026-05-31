@@ -104,3 +104,10 @@
 - New repo bootstrap runbook.
 - Template finalization test plan.
 - Roadmap and Control Board updates for 6E.
+- README template entrypoint.
+- New repo bootstrap script.
+- Makefile init-new-repo target.
+- Template inventory.
+- Agent-local file policy.
+- v0.1.0 candidate notes.
+- Bootstrap runbook and test updates.

@@ -93,4 +93,6 @@
 - Project roadmap document.
 - Control Board runbook.
 - Control Board refactor policy.
+- One-screen full-picture Control Board policy.
+- Checkbox/todo Control Board status style.
 - PR granularity rules.

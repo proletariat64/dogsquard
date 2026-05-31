@@ -15,11 +15,13 @@ supersedes: ""
 
 ## Purpose
 
-This document is the durable roadmap and progress history source for Dogsquard.
+This document stores the detailed roadmap and project history for Dogsquard.
 
-Issue #1 remains the compact Control Board for current state, next focus, decisions, open questions, and blocked items.
+Issue #1 stores the one-screen dashboard: current milestone, objective, capability map, decisions, open questions, guardrails, latest completed work, and next deliverable.
 
-Detailed completed phase history belongs here, not in Issue #1.
+The Issue #1 dashboard should use checkbox/todo style with green, yellow, and red status indicators. It should show a high-level capability map while breaking down only the next two or three deliverables into actionable task detail.
+
+The roadmap should preserve the full project picture without turning Issue #1 into a historical changelog.
 
 ## Current Product Definition
 
@@ -45,74 +47,49 @@ Dogsquard exists to make future internal app repositories easier to initialize, 
 
 ### 1. Documentation Governance
 
-Completed capabilities:
-
 - documentation directory model
-- document metadata rules
-- document naming rules
-- document status lifecycle
+- document metadata, naming, and lifecycle rules
 - local documentation checks
 - Doc Watch Guard concept
-- archive and inbox rules
+- inbox, archive, and generated document rules
 
 ### 2. Local Foundation
 
-Completed capabilities:
-
 - Makefile command center
-- local doc checks
-- release-check
 - safe placeholder environment example
-- local scripts for doc checking, doc watch, agent prompt generation, smoke checks, packaging, deploy, runtime, and server preflight
+- local doc-check and release-check commands
+- local helper scripts for docs, smoke, packaging, deploy, runtime, and preflight
 
 ### 3. GitHub Workflow Foundation
 
-Completed capabilities:
-
-- GitHub issue templates
-- pull request template
-- label source definition
+- GitHub issue templates and PR template
+- label source definition and labels runbook
 - PR Quality Gate
 - branch protection guidance
-- CI failure debugging guidance
-- CI quality gates test plan
+- CI failure debugging and quality gates docs
 
 ### 4. Example Internal App
 
-Completed capabilities:
-
-- Go backend skeleton
-- JS/TS frontend skeleton
-- Internal Task Intake CRUD model
-- backend validation and JSON errors
+- Go backend and JS/TS frontend skeleton
+- Internal Task Intake CRUD flow
+- backend validation and JSON error shape
 - API smoke script
-- frontend loading, empty, and error states
 - minimal Playwright smoke test
-- local e2e smoke runner
 
 ### 5. Dev Deployment Foundation
 
-Completed capabilities:
-
 - `cn.ant` selected as first dev target
 - `us.hermes` protected because it hosts `proletariat.icu` and multica
-- server preflight scripts and runbooks
-- release artifact packaging
-- manual SSH deploy
+- release artifact packaging and manual SSH deploy
 - user-level runtime start, stop, status, health, logs, diagnose, and rollback
-- GitHub Actions Dev Deploy workflow
-- Dev Deploy workflow validation
-- Dev Deploy workflow hardening
+- GitHub Actions Dev Deploy workflow implemented, validated, and hardened
 
 ### 6. Dev Public Access Design
-
-Completed capabilities:
 
 - firewall constraints documented
 - SSH tunnel first approach documented
 - direct high-port option deferred
 - reverse proxy and HTTPS option deferred
-- `us.hermes` remains excluded
 - no public URL exposed yet
 
 ## Key Infrastructure Decisions
@@ -160,7 +137,7 @@ Avoid combining unrelated high-risk surfaces, such as:
 
 A PR should be reviewable in one sitting and leave the repo in a coherent state.
 
-Validation details can be summarized in the PR body and detailed docs rather than split into command-sized PRs.
+Validation details can be summarized in the PR body and relevant test docs rather than split into command-sized PRs.
 
 ## Future Roadmap
 
@@ -170,8 +147,7 @@ Includes:
 
 - SSH tunnel validation
 - decide whether direct high-port public access is needed
-- maybe update runtime ports to firewall-friendly public candidates only if explicitly chosen
-- document final dev access mode
+- update dev access docs
 - no `us.hermes`
 - no production
 
@@ -204,24 +180,3 @@ Includes:
 - Do we need a dev domain or subdomain later?
 - When should Dogsquard become a reusable template release?
 - Should agent-local files like `AGENTS.md`, `CLAUDE.md`, and `roster.md` be committed or ignored?
-
-## Control Board Policy
-
-Issue #1 should contain only:
-
-- current milestone
-- current focus
-- next deliverable
-- current decisions
-- open questions
-- blocked items
-- links to roadmap and docs
-
-Issue #1 should not contain:
-
-- full historical changelog
-- every PR detail
-- every command-level validation
-- endless micro-phase checklist
-
-Detailed history and milestone grouping belong in this roadmap document.

@@ -218,6 +218,24 @@ No real deployment, runtime activation, reverse proxy change, nginx restart, or 
 No Phase 6C workflow may target:
 
 - `us.hermes`
+
+## Production Deployment Design Warning
+
+`us.hermes` remains protected during production deployment design.
+
+Production design may evaluate `us.hermes` only as an option. It must not implement or activate deployment there.
+
+Any future production route on `us.hermes` requires explicit approval and a route strategy that protects:
+
+- `proletariat.icu` `/`
+- `proletariat.icu` `/api`
+- `www.proletariat.icu` `/`
+- `www.proletariat.icu` `/api`
+- existing multica containers
+- existing reverse proxy configuration
+- existing SSL configuration
+
+Production design must not commit raw proxy config, secrets, or server output.
 - `43.130.49.185`
 - `proletariat.icu`
 - `www.proletariat.icu`

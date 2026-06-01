@@ -62,26 +62,28 @@ make package-release
 
 Dogsquard assumes the user manually creates a new GitHub repository first.
 
-Current new-repo flow:
+Canonical profile-aware flow:
 
 ```bash
 git clone <new-repo-url>
 cd dogsquard
-scripts/init-new-repo.sh ../new-repo
-DRY_RUN=false scripts/init-new-repo.sh ../new-repo
+PROJECT_TYPE=node TARGET_DIR=../new-repo scripts/bootstrap-project.sh
+PROJECT_TYPE=node TARGET_DIR=../new-repo DRY_RUN=false scripts/bootstrap-project.sh
 ```
 
 Optional example app:
 
 ```bash
-DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/init-new-repo.sh ../new-repo
+PROJECT_TYPE=go-js TARGET_DIR=../new-repo DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/bootstrap-project.sh
 ```
 
-Optional dev deploy assets:
+Optional production profile scaffold:
 
 ```bash
-DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/init-new-repo.sh ../new-repo
+PROJECT_TYPE=node TARGET_DIR=../new-repo DRY_RUN=false INCLUDE_PRODUCTION_PROFILE=true scripts/bootstrap-project.sh
 ```
+
+`scripts/init-new-repo.sh` remains a conservative legacy compatibility flow. Use `scripts/bootstrap-project.sh` by default because it supports `PROJECT_TYPE=node`, `PROJECT_TYPE=go-js`, and `PROJECT_TYPE=docs-only`, and it is covered by `make bootstrap-test`.
 
 Review generated files before committing in the target repo.
 

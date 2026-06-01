@@ -122,8 +122,8 @@ jobs:
             frontend/test-results/
           if-no-files-found: ignore
 
-  pr-scope-guard:
-    name: Temporary Scope Guard
+  production-safety-guard:
+    name: Production Safety Guard
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -155,10 +155,10 @@ jobs:
           violations=()
           while IFS= read -r file; do
             case "$file" in
-              deploy/*|docker-compose.yml|Dockerfile|.github/workflows/deploy.yml)
+              docker-compose.yml|Dockerfile|.github/workflows/deploy.yml|.github/workflows/deploy-production.yml)
                 violations+=("$file")
                 ;;
-              playwright.config.*|playwright/*|e2e/*|tests/e2e/*|frontend/e2e/*)
+              nginx/*|caddy/*|traefik/*|server-config/*|server-config/**|reverse-proxy/*|reverse-proxy/**)
                 violations+=("$file")
                 ;;
             esac
@@ -166,15 +166,15 @@ jobs:
 
           if [[ "${#violations[@]}" -gt 0 ]]; then
             echo
-            echo "Temporary scope guard failed."
-            echo "This PR must not add deployment, Docker runtime files, or out-of-scope Playwright files."
+            echo "Production safety guard failed."
+            echo "This PR must not add production workflow files, Docker runtime files, or raw server/reverse-proxy config."
             printf -- '- %s\n' "${violations[@]}"
             echo
-            echo "Later phases can remove or relax this guard when those areas enter scope."
+            echo "Use explicit approval and a focused PR before adding production automation or server config."
             exit 1
           fi
 
-          echo "Temporary scope guard passed."
+          echo "Production safety guard passed."
 
   pr-summary:
     name: PR Quality Summary
@@ -184,7 +184,7 @@ jobs:
       - repository-hygiene
       - local-foundation
       - playwright-smoke
-      - pr-scope-guard
+      - production-safety-guard
     if: always()
     steps:
       - name: Summarize required jobs
@@ -194,7 +194,7 @@ jobs:
           REPOSITORY_HYGIENE: ${{ needs.repository-hygiene.result }}
           LOCAL_FOUNDATION: ${{ needs.local-foundation.result }}
           PLAYWRIGHT_SMOKE: ${{ needs.playwright-smoke.result }}
-          PR_SCOPE_GUARD: ${{ needs.pr-scope-guard.result }}
+          PRODUCTION_SAFETY_GUARD: ${{ needs.production-safety-guard.result }}
         run: |
           set -euo pipefail
           failed=0
@@ -203,7 +203,7 @@ jobs:
             "repository-hygiene:$REPOSITORY_HYGIENE" \
             "local-foundation:$LOCAL_FOUNDATION" \
             "playwright-smoke:$PLAYWRIGHT_SMOKE" \
-            "pr-scope-guard:$PR_SCOPE_GUARD"; do
+            "production-safety-guard:$PRODUCTION_SAFETY_GUARD"; do
             name="${item%%:*}"
             result="${item#*:}"
             echo "$name: $result"

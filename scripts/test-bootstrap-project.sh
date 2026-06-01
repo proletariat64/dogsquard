@@ -202,6 +202,9 @@ assert_contains "$production_target/docs/07_runbooks/runbook-production-profile.
 if (cd "$production_target" && PROD_HOST=43.130.49.185 PROD_DOMAIN=proletariat.icu PROD_REPO_NAME=dogpdteamreport PROD_ROUTE=/dogpdteamreport scripts/production-profile-guard.sh >/dev/null 2>&1); then
   fail "production guard accepted raw protected IP"
 fi
+if (cd "$production_target" && PROD_HOST=us.hermes PROD_DOMAIN=www.proletariat.icu PROD_REPO_NAME=dogpdteamreport PROD_ROUTE=/dogpdteamreport scripts/production-profile-guard.sh >/dev/null 2>&1); then
+  fail "production guard accepted protected www.proletariat.icu domain"
+fi
 if (cd "$production_target" && PROD_HOST=example.internal PROD_DOMAIN=example.internal PROD_ROUTE=/api scripts/production-profile-guard.sh >/dev/null 2>&1); then
   fail "production guard accepted protected route /api"
 fi

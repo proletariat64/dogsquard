@@ -17,7 +17,7 @@ supersedes: ""
 
 The PR Quality Gate is the deterministic GitHub Actions quality gate for Dogsquard pull requests.
 
-It checks shell syntax, repository hygiene, local documentation rules, template-safe lint/test/build commands, minimal Playwright smoke coverage, and a temporary scope guard.
+It checks shell syntax, repository hygiene, local documentation rules, template-safe lint/test/build commands, minimal Playwright smoke coverage, and a production safety guard.
 
 ## Workflow Jobs
 
@@ -58,17 +58,17 @@ This verifies that the example app loads, shows the empty state, creates a valid
 
 It is not a full frontend regression suite.
 
-### Temporary Scope Guard
+### Production Safety Guard
 
-Lists changed files and fails when this PR changes out-of-phase paths:
+Lists changed files and fails when a PR attempts to add high-risk production/server artifacts without explicit approval:
 
-- `deploy/**`
 - `docker-compose.yml`
 - `Dockerfile`
 - `.github/workflows/deploy.yml`
-- out-of-scope Playwright paths
+- `.github/workflows/deploy-production.yml`
+- raw server or reverse-proxy config paths such as `nginx/**`, `caddy/**`, `traefik/**`, `server-config/**`, and `reverse-proxy/**`
 
-Backend and frontend paths are allowed starting in Phase 5B. Minimal Playwright smoke files are allowed starting in Phase 5D. This guard remains intentionally temporary for deployment, Docker runtime, production release, and broader test paths.
+Backend, frontend, deployment scaffold, runtime script, and Playwright smoke changes are now in scope when the PR itself is coherent and approved by the Control Board. The guard is no longer a phase-era blanket blocker; it protects against raw server config, Docker runtime files, and production workflow activation.
 
 ### PR Quality Summary
 
@@ -115,16 +115,16 @@ bash -n scripts/*.sh
 
 Fix the reported script and line number. Shell syntax checks do not execute scripts, so runtime failures need separate reproduction.
 
-## Fixing Scope Guard Failures
+## Fixing Production Safety Guard Failures
 
 Read the changed file list in the failed job.
 
 If the PR changed a forbidden path, either:
 
 - remove that change from the PR, or
-- move it to the later phase where the path belongs
+- get explicit approval and move it to a focused production/server PR
 
-Do not bypass the guard by renaming files to hide deployment, app code, or Playwright behavior.
+Do not bypass the guard by renaming files to hide production workflow, Docker runtime, raw server config, or reverse-proxy behavior.
 
 ## Fixing PR Quality Summary Failures
 
@@ -134,14 +134,15 @@ Open the failed individual job first.
 
 Fix the underlying job, push the correction, and let the summary rerun.
 
-## Updating Or Relaxing The Scope Guard
+## Updating Or Relaxing The Production Safety Guard
 
-Update or remove the temporary scope guard when the Control Board moves into a phase where one of the guarded areas becomes allowed.
+Update or remove the production safety guard only when the Control Board explicitly approves a production/server capability that needs one of the guarded areas.
 
 Examples:
 
-- A later testing phase may allow Playwright.
-- Deployment phases may allow Docker and deploy workflow files.
+- a production workflow implementation PR may allow `.github/workflows/deploy-production.yml`
+- a Docker runtime decision may allow `Dockerfile` or `docker-compose.yml`
+- a server-config management decision may allow reviewed reverse-proxy snippets
 
 Any relaxation should be explicit in the PR summary and related issue.
 

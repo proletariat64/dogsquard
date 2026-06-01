@@ -72,9 +72,9 @@ The first real-world adoption target was a Node.js project. The trial provided c
 
 The example app validates Dogsquard itself. It is not mandatory business starter logic for every future project.
 
-## Why Deployment Workflow Should Be Opt-in
+## Why Deployment Workflow Should Be Profile-controlled
 
-Deployment depends on host, route, secrets, ports, and operational context. Copying deployment workflow by default is unsafe and creates irrelevant setup work for repos that are not ready to deploy.
+Deployment depends on host, route, secrets, ports, and operational context. Dogsquard now treats dev deploy as default bootstrap content for `PROJECT_TYPE=node` and `PROJECT_TYPE=go-js`, because cn.ant dev deployment is part of the reusable operating baseline. `PROJECT_TYPE=docs-only` remains deploy-free by default, and production profile scaffold remains explicit opt-in.
 
 ## Why Existing Files Must Be Preserved
 
@@ -82,4 +82,6 @@ Real repositories already contain product-specific README, docs, source, tests, 
 
 ## Future Migration Path
 
-The next implementation should update `scripts/init-new-repo.sh` to accept `PROJECT_TYPE`, generate profile-specific Makefile and PR Quality Gate assets, and keep dry-run behavior as the default.
+`scripts/bootstrap-project.sh` is now the canonical profile-aware bootstrap entrypoint. `scripts/init-new-repo.sh` remains a conservative legacy compatibility flow.
+
+Future migration work should keep `bootstrap-project.sh` as the default agent-facing command and either retire `init-new-repo.sh` or keep it clearly labeled as legacy.

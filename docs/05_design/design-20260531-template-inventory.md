@@ -17,7 +17,9 @@ supersedes: ""
 
 Define which Dogsquard files belong to the reusable template core, which files are optional, and which files must stay local-only.
 
-This inventory supports `scripts/init-new-repo.sh`.
+This inventory supports the canonical profile-aware bootstrap entrypoint, `scripts/bootstrap-project.sh`.
+
+`scripts/init-new-repo.sh` remains a conservative legacy compatibility flow. New adoption work should use `scripts/bootstrap-project.sh` because it is profile-aware and covered by `make bootstrap-test`.
 
 ## Template Core Files
 

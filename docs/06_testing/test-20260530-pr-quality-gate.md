@@ -17,7 +17,7 @@ supersedes: ""
 
 Define the validation scope for the Dogsquard PR Quality Gate.
 
-The gate should provide deterministic checks for repository work without adding deployment, production release, self-hosted runners, database, auth, or full Playwright regression.
+The gate should provide deterministic checks for repository work while preventing accidental production workflow, Docker runtime, raw server config, or raw reverse-proxy config changes.
 
 ## Checks Included
 
@@ -27,7 +27,7 @@ The current workflow includes:
 - repository hygiene through `git diff --check`
 - local foundation commands through `make help`, `make doc-check`, `make doc-guard`, and `make release-check`
 - minimal Playwright smoke through `make e2e-smoke`
-- temporary scope guard for forbidden out-of-phase paths
+- production safety guard for high-risk production/server paths
 - final `PR Quality Summary` job that fails when a required job fails or is cancelled
 
 ## Required For PR Merge
@@ -45,8 +45,8 @@ The individual jobs are required through the summary job dependency chain.
 The current gate does not include:
 
 - full Playwright regression
-- deployment
-- production release
+- automatic production deployment
+- unapproved production release
 - self-hosted runner
 - database integration
 - authentication checks
@@ -87,14 +87,14 @@ GitHub Actions should run `PR Quality Gate` and report:
 - `Repository Hygiene`
 - `Local Foundation`
 - `Playwright Smoke`
-- `Temporary Scope Guard`
+- `Production Safety Guard`
 - `PR Quality Summary`
 
 The `PR Quality Summary` job should be the required status check after branch protection is manually configured.
 
 ## Known Limitations
 
-- The scope guard is temporary and now allows backend/frontend changes and minimal Playwright smoke files.
+- The production safety guard allows in-scope deployment scaffold, runtime script, and Playwright smoke work, but blocks unapproved production workflow, Docker runtime, and raw server/reverse-proxy config paths.
 - The workflow runs minimal Playwright smoke only, not full regression.
 - The workflow does not deploy.
 - The workflow does not validate label sync automation.
@@ -108,5 +108,5 @@ Later phases may add:
 - full Playwright regression
 - documentation gate refinements
 - branch protection requiring `PR Quality Summary`
-- deployment workflows for dev and production
+- deployment workflow refinements after explicit approval
 - production approval gates

@@ -144,3 +144,6 @@
 - Scaffold-only production profile bootstrap option.
 - Production profile placeholder env, runbook, test plan, and protected-target guard.
 - Production route-strategy decision for `us.hermes` using `proletariat.icu/{reponame}/` and `proletariat.icu/{reponame}/api`.
+- First production launch findings from `dogpdteamreport`.
+- Production deployment runbook/test updates from the first launch.
+- Route-prefix frontend-root, deploy-root expansion, and active reverse-proxy file lessons.

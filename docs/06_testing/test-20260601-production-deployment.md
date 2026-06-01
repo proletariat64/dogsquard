@@ -56,6 +56,26 @@ Future approved implementation should validate:
 - rollback requires an explicit release id
 - failure diagnostics do not dump secrets or raw server config
 
+# First Launch Validation Results
+
+The first production launch activation was completed for `dogpdteamreport`.
+
+Validated:
+
+- frontend route `https://proletariat.icu/dogpdteamreport/` returned HTTP 200 and served app HTML
+- backend route `https://proletariat.icu/dogpdteamreport/api/health` returned JSON health success
+- static assets loaded under `/dogpdteamreport/`
+- rollback switched to a previous release and then rolled forward to the fixed release
+- final active release was `20260601131820-67b0897f3892`
+- existing multica behavior remained on `www.proletariat.icu` `/` and `/api`
+
+Additional regression expectations for future adopted apps:
+
+- `/{reponame}` redirects to `/{reponame}/`
+- `/{reponame}/` returns frontend HTML and does not self-redirect
+- deploy root expansion does not create a literal `$HOME/~` directory
+- route activation checks the active nginx file, not only a `sites-available` copy
+
 # Negative Tests
 
 Future tests must confirm production deploy does not:

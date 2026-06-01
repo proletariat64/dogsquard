@@ -244,7 +244,7 @@ Current design direction:
 
 ### Milestone 7A: Production Implementation Planning
 
-Status: current.
+Status: completed.
 
 The user has explicitly approved production implementation planning only.
 
@@ -271,6 +271,32 @@ Recommended next step after planning:
 - if implementation is approved later, open one focused production implementation PR
 - if implementation is deferred, return to product feature work or Dogsquard hardening
 
+### Milestone 7B: First Production Launch Activation
+
+Status: completed for `dogpdteamreport`.
+
+The first production proof app is live on the approved route:
+
+- frontend: `https://proletariat.icu/dogpdteamreport/`
+- backend: `https://proletariat.icu/dogpdteamreport/api`
+
+Validated launch evidence:
+
+- production deploy/runtime/health/rollback support was implemented in the adopted app
+- route activation was scoped to `/dogpdteamreport`
+- rollback was validated and the app was rolled forward to the fixed release
+- existing multica behavior on `www.proletariat.icu` `/` and `/api` was preserved
+
+Reusable lessons are captured in:
+
+- `docs/05_design/design-20260601-first-production-launch-findings.md`
+
+Recommended next step after launch:
+
+- fold concrete reusable lessons back into Dogsquard production profile guidance
+- do not automate raw reverse proxy edits yet
+- keep future production routes approval-gated
+
 ## Open Questions
 
 - When should Dogsquard become a reusable template release?
@@ -279,3 +305,4 @@ Recommended next step after planning:
 - Which adopted app should be the first production implementation target?
 - What production approval gate should be enforced in GitHub before implementation?
 - Should the first implementation PR be scaffold-only or include a production workflow?
+- Should route activation remain a manual operator step or become an approval-gated workflow after more proof apps?

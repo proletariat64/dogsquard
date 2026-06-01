@@ -17,6 +17,17 @@ Define the planning boundary for a future production implementation PR after the
 
 This document does not approve production implementation itself. It converts the completed production design into a reviewable implementation plan and preserves the approval gate before any production workflow, route, server, or public exposure change.
 
+## Post-launch Update
+
+After this planning document was written, the user explicitly approved Production Launch Activation for the first proof app, `dogpdteamreport`.
+
+The approved launch was completed on `us.hermes` with:
+
+- frontend: `https://proletariat.icu/dogpdteamreport/`
+- backend: `https://proletariat.icu/dogpdteamreport/api`
+
+Reusable launch findings are captured in `docs/05_design/design-20260601-first-production-launch-findings.md`.
+
 # Approval Boundary
 
 Approved now:
@@ -158,6 +169,25 @@ Implemented scaffold shape:
 - generated guard script accepts the approved `us.hermes` plus repo-scoped `proletariat.icu/{reponame}` route shape and rejects route collisions
 - no production deploy workflow is generated
 - no server or route behavior is changed
+
+# First Launch Evidence
+
+The first production launch validated the production implementation shape against a real adopted app.
+
+Evidence:
+
+- production package/deploy/runtime/health/rollback support was implemented in `dogpdteamreport`
+- route-prefix app support was required before public activation
+- active production release: `20260601131820-67b0897f3892`
+- rollback was validated to a prior release and rolled forward again
+- `www.proletariat.icu` `/` and `/api` multica behavior was preserved
+
+Lessons that should influence future implementation:
+
+- remote deploy roots using `~/...` must be expanded on the remote host
+- route activation must discover the active reverse proxy file, not assume `sites-available` and `sites-enabled` are symlinked
+- apps under `/{reponame}/` need a regression check for the frontend root
+- raw server config and raw logs must stay out of git
 
 # Acceptance Criteria
 

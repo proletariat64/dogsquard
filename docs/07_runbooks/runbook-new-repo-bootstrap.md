@@ -17,7 +17,9 @@ supersedes: ""
 
 Describe the workflow for applying Dogsquard to a newly created repository.
 
-Dogsquard now provides a conservative bootstrap script. The script initializes the reusable process, documentation, local command, and GitHub template foundation. Optional example app and dev deploy assets must be explicitly requested.
+Dogsquard now provides a profile-aware bootstrap script. Use `scripts/bootstrap-project.sh` as the default entrypoint because it supports `PROJECT_TYPE=node`, `PROJECT_TYPE=go-js`, and `PROJECT_TYPE=docs-only`, and it is covered by `make bootstrap-test`.
+
+`scripts/init-new-repo.sh` remains available as a conservative legacy compatibility flow, but it is not the canonical path for new adoption work.
 
 ## Expected Future Workflow
 
@@ -51,22 +53,28 @@ cd <new-repo>
 From the Dogsquard repository, run a dry-run first:
 
 ```bash
-scripts/init-new-repo.sh <target-path>
+PROJECT_TYPE=node TARGET_DIR=<target-path> scripts/bootstrap-project.sh
 ```
 
 Apply the bootstrap after reviewing the planned actions:
 
 ```bash
-DRY_RUN=false scripts/init-new-repo.sh <target-path>
+PROJECT_TYPE=node TARGET_DIR=<target-path> DRY_RUN=false scripts/bootstrap-project.sh
 ```
 
 If the target already contains files, the script skips existing paths by default. Only overwrite existing files when intentional:
 
 ```bash
-DRY_RUN=false FORCE=true scripts/init-new-repo.sh <target-path>
+PROJECT_TYPE=node TARGET_DIR=<target-path> DRY_RUN=false FORCE=true scripts/bootstrap-project.sh
 ```
 
-The default bootstrap copies or initializes:
+Choose the profile that matches the target repo:
+
+- `PROJECT_TYPE=node` for Node/JS/TS-only repos
+- `PROJECT_TYPE=go-js` for Go backend plus JS/TS frontend repos
+- `PROJECT_TYPE=docs-only` for documentation/process repos
+
+The profile-aware bootstrap copies or initializes:
 
 - docs governance structure
 - Makefile and scripts
@@ -86,22 +94,49 @@ The Internal Task Intake app is example and validation material, not mandatory b
 Copy it only when useful:
 
 ```bash
-DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/init-new-repo.sh <target-path>
+PROJECT_TYPE=go-js TARGET_DIR=<target-path> DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/bootstrap-project.sh
 ```
 
 This copies `backend/`, `frontend/`, API/e2e smoke scripts, and example app design/test/runbook docs.
 
 ## Optional Dev Deploy Include
 
-Dev deploy assets are optional because many new repos will not be ready to deploy immediately.
+Dev deploy assets are default for `PROJECT_TYPE=node` and `PROJECT_TYPE=go-js`, because current Dogsquard policy treats cn.ant dev deployment and high-port access as baseline capabilities.
 
-Copy them only after the target repository needs the cn.ant-style dev deploy pattern:
+Disable them only when the target repository should remain local/docs-only for now:
 
 ```bash
-DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/init-new-repo.sh <target-path>
+PROJECT_TYPE=node TARGET_DIR=<target-path> DRY_RUN=false INCLUDE_DEV_DEPLOY=false scripts/bootstrap-project.sh
 ```
 
-This copies the Dev Deploy workflow, packaging/deploy/runtime scripts, and deployment docs. The generated repository must still configure GitHub secrets, variables, target hosts, deploy roots, and protected-host rules before any real deploy.
+For `PROJECT_TYPE=docs-only`, dev deploy remains off by default and can be explicitly included:
+
+```bash
+PROJECT_TYPE=docs-only TARGET_DIR=<target-path> DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/bootstrap-project.sh
+```
+
+Dev deploy material still requires GitHub secrets, variables, target hosts, deploy roots, and protected-host rules before any real deploy.
+
+## Optional Production Profile Scaffold
+
+Production profile scaffold is opt-in and planning-only:
+
+```bash
+PROJECT_TYPE=node TARGET_DIR=<target-path> DRY_RUN=false INCLUDE_PRODUCTION_PROFILE=true scripts/bootstrap-project.sh
+```
+
+This generates placeholders, a guard script, and production runbook/test docs. It does not generate a production deploy workflow, deploy anything, change servers, edit reverse proxy config, or expose a public route.
+
+## Legacy Conservative Bootstrap
+
+Use `scripts/init-new-repo.sh` only when a conservative compatibility copy is explicitly desired:
+
+```bash
+scripts/init-new-repo.sh <target-path>
+DRY_RUN=false scripts/init-new-repo.sh <target-path>
+```
+
+Prefer `scripts/bootstrap-project.sh` for current Dogsquard adoption work.
 
 ## Review Generated Files
 

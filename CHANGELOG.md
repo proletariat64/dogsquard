@@ -147,3 +147,7 @@
 - First production launch findings from `dogpdteamreport`.
 - Production deployment runbook/test updates from the first launch.
 - Route-prefix frontend-root, deploy-root expansion, and active reverse-proxy file lessons.
+- Post-launch governance guard alignment.
+- Canonical profile-aware bootstrap documentation.
+- Production safety guard replacing the temporary scope guard.
+- Explicit `www.proletariat.icu` rejection in generated production profile guard tests.

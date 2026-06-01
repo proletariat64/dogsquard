@@ -31,7 +31,7 @@ The summary job depends on:
 - `Repository Hygiene`
 - `Local Foundation`
 - `Playwright Smoke`
-- `Temporary Scope Guard`
+- `Production Safety Guard`
 
 If any dependency fails or is cancelled, `PR Quality Summary` fails.
 
@@ -43,7 +43,7 @@ Individual jobs are useful for diagnosis and may be viewed directly:
 - `Repository Hygiene`
 - `Local Foundation`
 - `Playwright Smoke`
-- `Temporary Scope Guard`
+- `Production Safety Guard`
 
 For branch protection, the summary job should be required first to keep the protected-branch rule simple.
 
@@ -73,7 +73,7 @@ CI maps to local commands as follows:
 | Repository Hygiene | `git diff --check` |
 | Local Foundation | `make help`, `make doc-check`, `make doc-guard`, `make release-check` |
 | Playwright Smoke | `make e2e-smoke` |
-| Temporary Scope Guard | review changed file paths against current phase scope |
+| Production Safety Guard | block unapproved production workflow, Docker runtime, or raw server/reverse-proxy config paths |
 | PR Quality Summary | all required jobs succeeded |
 
 ## Playwright Smoke Scope

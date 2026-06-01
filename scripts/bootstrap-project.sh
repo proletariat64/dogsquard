@@ -933,7 +933,10 @@ case "$PROD_ROUTE" in
 esac
 
 case "$PROD_DOMAIN" in
-  proletariat.icu|www.proletariat.icu)
+  www.proletariat.icu)
+    fail "www.proletariat.icu is reserved for existing multica routes and is not allowed for generated production profile planning."
+    ;;
+  proletariat.icu)
     [[ -n "$PROD_REPO_NAME" ]] || fail "PROD_REPO_NAME is required for repo-scoped proletariat.icu routes."
     [[ "$PROD_REPO_NAME" != "REPLACE_WITH_REPO_NAME" ]] || fail "PROD_REPO_NAME must be replaced before route validation."
     case "$PROD_ROUTE" in
@@ -1029,7 +1032,7 @@ PROD_ROUTE=/dogpdteamreport \
 scripts/production-profile-guard.sh
 ```
 
-The guard must fail for raw protected IPs, root routes, top-level `/api`, and `proletariat.icu` routes outside the approved repo prefix. Passing the guard does not approve implementation or route activation.
+The guard must fail for raw protected IPs, `www.proletariat.icu`, root routes, top-level `/api`, and `proletariat.icu` routes outside the approved repo prefix. Passing the guard does not approve implementation or route activation.
 
 # What Not To Do
 

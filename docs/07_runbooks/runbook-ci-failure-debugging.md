@@ -87,11 +87,11 @@ Failure may mean:
 
 This is not a full regression suite.
 
-### Temporary Scope Guard
+### Production Safety Guard
 
-Temporary Scope Guard fails when a PR changes paths outside the current phase.
+Production Safety Guard fails when a PR changes high-risk production/server paths without explicit approval.
 
-For Phase 5E, deployment, Docker, production release, self-hosted runner, database, auth, and full regression work remain out of scope.
+Current blocked paths include production deploy workflows, Docker runtime files, and raw server or reverse-proxy config directories. Deployment scaffold, runtime script, and Playwright smoke changes are not blocked just because of their path; they must still be coherent and Control Board-aligned.
 
 ### PR Quality Summary
 

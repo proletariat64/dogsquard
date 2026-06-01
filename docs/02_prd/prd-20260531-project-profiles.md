@@ -200,7 +200,7 @@ Profiles may need safe placeholders for ignored runtime directories. For Node re
 - Dev deploy assets are not default for `PROJECT_TYPE=docs-only`.
 - cn.ant high-port defaults are generated for applicable dev deploy profiles.
 - Production profile scaffold is opt-in and never generates a production deploy workflow.
-- Production profile guard accepts only the approved `us.hermes` plus repo-scoped `proletariat.icu/{reponame}` route shape and rejects root, top-level `/api`, raw protected IP, and wrong-prefix routes.
+- Production profile guard accepts only the approved `us.hermes` plus repo-scoped no-www `proletariat.icu/{reponame}` route shape and rejects `www.proletariat.icu`, root, top-level `/api`, raw protected IP, and wrong-prefix routes.
 - Local/private agent files are ignored by default.
 - Optional npm script detection is quiet when scripts are absent.
 - Bootstrap behavior is covered by `make bootstrap-test`.

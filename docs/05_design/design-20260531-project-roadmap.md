@@ -157,7 +157,7 @@ Result:
 
 - SSH tunnel access validated for `cn.ant`
 - SSH tunnel is the current recommended dev access mode
-- direct high-port public access remains optional future work
+- cn.ant high-port dev access is now the default app-profile bootstrap direction
 - reverse proxy and HTTPS remain optional future work
 - no `us.hermes`
 - no production
@@ -172,7 +172,8 @@ Deliverables:
 - 6E-B Template Finalization Implementation: done
 - `v0.1.0` release candidate and fresh-repo trial: done
 - Project Profiles and Bootstrap Strategy: current
-- Bootstrap Script PR with `PROJECT_TYPE=node`, `PROJECT_TYPE=go-js`, and `PROJECT_TYPE=docs-only`: in progress
+- Bootstrap Script PR with `PROJECT_TYPE=node`, `PROJECT_TYPE=go-js`, and `PROJECT_TYPE=docs-only`: done
+- v0.1.1 Bootstrap Fixes: current
 
 Scope:
 
@@ -189,7 +190,8 @@ Current 6E result:
 - README acts as the Dogsquard template entrypoint
 - bootstrap script initializes conservative template core
 - example app is optional material
-- dev deploy assets are optional material
+- dev deploy assets are default for app profiles and disabled by default for docs-only
+- cn.ant high-port dev access defaults are part of app profile bootstrap output
 - agent-local files are excluded unless explicitly templated
 - real-world Node trial identified profile-aware bootstrap as the next improvement
 
@@ -200,9 +202,13 @@ Current 6E result:
 - support `PROJECT_TYPE=go-js`
 - support `PROJECT_TYPE=docs-only`
 - generate npm-based Makefile and PR Quality Gate
+- generate dev deploy support by default for app profiles
+- generate cn.ant high-port dev defaults on ports `8173` and `8180`
 - preserve existing README, `ddd/`, `spec/`, source, and tests
-- keep Dogsquard example app and dev deploy workflow opt-in
+- keep Dogsquard example app opt-in
+- keep docs-only deploy-free by default
 - keep dry-run and overwrite safety as defaults
+- append local/private agent file ignores
 - validate profile behavior with `make bootstrap-test`
 
 ### Milestone 7: Production Deployment Later

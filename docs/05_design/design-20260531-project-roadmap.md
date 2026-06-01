@@ -237,8 +237,9 @@ Current design direction:
 - production deployment is an opt-in profile for adopted apps
 - Dogsquard itself remains the reusable operating kit, not a production service by default
 - production implementation is not approved by design work alone
+- first production planning target is `us.hermes`
+- approved route shape is `proletariat.icu/{reponame}/` for frontend and `proletariat.icu/{reponame}/api` for backend
 - route/domain strategy must protect `proletariat.icu` `/` and `/api`
-- `us.hermes` remains protected until an explicit route plan is approved
 - a dedicated production host remains the lowest-risk option if one is available
 
 ### Milestone 7A: Production Implementation Planning
@@ -254,6 +255,7 @@ Planning scope:
 - define protected target and route guardrails
 - define safe PR sequencing
 - keep implementation blocked until separately approved
+- add scaffold-only production profile templates, checklists, and guards for adopted apps
 
 Planning exclusions:
 
@@ -261,11 +263,12 @@ Planning exclusions:
 - no production deploy
 - no server or reverse proxy changes
 - no public route exposure
-- no `us.hermes` activation
+- no `us.hermes` activation until separate production implementation approval
 
 Recommended next step after planning:
 
-- if implementation is approved, open one focused production profile scaffold PR
+- review the scaffold-only production profile PR
+- if implementation is approved later, open one focused production implementation PR
 - if implementation is deferred, return to product feature work or Dogsquard hardening
 
 ## Open Questions
@@ -274,5 +277,5 @@ Recommended next step after planning:
 - Do we need direct high-port access on `cn.ant` later?
 - Do we need a dev domain or subdomain later?
 - Which adopted app should be the first production implementation target?
-- Which production host and route are approved?
+- What production approval gate should be enforced in GitHub before implementation?
 - Should the first implementation PR be scaffold-only or include a production workflow?

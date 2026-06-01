@@ -76,6 +76,35 @@ When `INCLUDE_DEV_DEPLOY=true`, the bootstrap also copies:
 
 Generated repositories must still review host, deploy root, port, and protected-target settings before enabling any real deploy.
 
+## Optional Production Profile Scaffold Files
+
+Production profile scaffold is planning-only and opt-in.
+
+When `INCLUDE_PRODUCTION_PROFILE=true`, bootstrap generates:
+
+- `.env.dogsquard-production.example`
+- `scripts/production-profile-guard.sh`
+- `docs/07_runbooks/runbook-production-profile.md`
+- `docs/06_testing/test-production-profile.md`
+
+The scaffold must not generate:
+
+- `.github/workflows/deploy-production.yml`
+- production server config
+- reverse proxy config
+- public route configuration
+- secrets or real host credentials
+
+Generated repositories must still receive separate explicit approval before production implementation, public route activation, or any server change.
+
+Current route-strategy decision for generated planning placeholders:
+
+- host: `us.hermes`
+- frontend route: `https://proletariat.icu/{reponame}/`
+- backend route: `https://proletariat.icu/{reponame}/api`
+
+The generated scaffold may encode these placeholders, but it must still avoid server changes and workflow implementation.
+
 ## Excluded From Bootstrap
 
 The bootstrap must not copy:

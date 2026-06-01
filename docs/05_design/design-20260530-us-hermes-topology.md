@@ -242,6 +242,29 @@ Production design must not commit raw proxy config, secrets, or server output.
 
 Workflow rollback support does not change this boundary. Rollback is for the cn.ant development deploy root only.
 
+## Production Route Strategy Decision
+
+The user selected `us.hermes` as the first production planning target.
+
+Approved production route shape for adopted repositories:
+
+```text
+https://proletariat.icu/{reponame}/
+  -> adopted app frontend
+
+https://proletariat.icu/{reponame}/api
+  -> adopted app backend
+```
+
+This strategy is intended to preserve existing multica ownership of:
+
+- `https://proletariat.icu/`
+- `https://proletariat.icu/api`
+- `https://www.proletariat.icu/`
+- `https://www.proletariat.icu/api`
+
+This decision is route-strategy approval for planning and scaffold validation only. It does not approve production implementation, reverse proxy edits, server changes, public route activation, deploys, or multica changes.
+
 ## Phase 6D Dev Public Access Warning
 
 User-provided firewall policy for `us.hermes` allows public access on:

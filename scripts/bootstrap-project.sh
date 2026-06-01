@@ -8,6 +8,7 @@ FORCE="${FORCE:-false}"
 CREATE_TARGET="${CREATE_TARGET:-false}"
 INCLUDE_EXAMPLE_APP="${INCLUDE_EXAMPLE_APP:-false}"
 INCLUDE_DEV_DEPLOY_INPUT="${INCLUDE_DEV_DEPLOY:-}"
+INCLUDE_PRODUCTION_PROFILE="${INCLUDE_PRODUCTION_PROFILE:-false}"
 
 usage() {
   cat <<'USAGE'
@@ -23,12 +24,14 @@ Defaults:
   INCLUDE_EXAMPLE_APP=false
   INCLUDE_DEV_DEPLOY=true for PROJECT_TYPE=node and PROJECT_TYPE=go-js
   INCLUDE_DEV_DEPLOY=false for PROJECT_TYPE=docs-only
+  INCLUDE_PRODUCTION_PROFILE=false
 
 Examples:
   PROJECT_TYPE=node TARGET_DIR=../app scripts/bootstrap-project.sh
   PROJECT_TYPE=node TARGET_DIR=../app DRY_RUN=false scripts/bootstrap-project.sh
   PROJECT_TYPE=node TARGET_DIR=../app DRY_RUN=false FORCE=true scripts/bootstrap-project.sh
   PROJECT_TYPE=node TARGET_DIR=../app DRY_RUN=false INCLUDE_DEV_DEPLOY=false scripts/bootstrap-project.sh
+  PROJECT_TYPE=node TARGET_DIR=../app DRY_RUN=false INCLUDE_PRODUCTION_PROFILE=true scripts/bootstrap-project.sh
   PROJECT_TYPE=go-js TARGET_DIR=../app DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/bootstrap-project.sh
   PROJECT_TYPE=docs-only TARGET_DIR=../app DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/bootstrap-project.sh
 USAGE
@@ -70,6 +73,7 @@ validate_bool FORCE "$FORCE"
 validate_bool CREATE_TARGET "$CREATE_TARGET"
 validate_bool INCLUDE_EXAMPLE_APP "$INCLUDE_EXAMPLE_APP"
 validate_bool INCLUDE_DEV_DEPLOY "$INCLUDE_DEV_DEPLOY"
+validate_bool INCLUDE_PRODUCTION_PROFILE "$INCLUDE_PRODUCTION_PROFILE"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -105,6 +109,7 @@ echo "FORCE=$FORCE"
 echo "CREATE_TARGET=$CREATE_TARGET"
 echo "INCLUDE_EXAMPLE_APP=$INCLUDE_EXAMPLE_APP"
 echo "INCLUDE_DEV_DEPLOY=$INCLUDE_DEV_DEPLOY"
+echo "INCLUDE_PRODUCTION_PROFILE=$INCLUDE_PRODUCTION_PROFILE"
 echo
 
 plan() {
@@ -844,6 +849,250 @@ Production deployment remains separate and requires explicit approval before imp
 RUNBOOK
 }
 
+copy_optional_production_profile() {
+  if [[ "$INCLUDE_PRODUCTION_PROFILE" == "true" ]]; then
+    echo
+    echo "Production profile scaffold:"
+    write_production_profile_env
+    write_production_profile_guard
+    write_production_profile_runbook
+    write_production_profile_test_plan
+  else
+    echo
+    echo "SKIP production profile scaffold: set INCLUDE_PRODUCTION_PROFILE=true to generate planning-only production templates."
+  fi
+}
+
+write_production_profile_env() {
+  write_file .env.dogsquard-production.example <<'ENV'
+# Dogsquard production profile scaffold.
+# This file contains placeholder names only. Do not commit real secrets.
+# Production implementation and route activation require separate explicit approval.
+
+PRODUCTION_PROFILE_ENABLED=false
+PROD_APP_NAME=REPLACE_ME
+PROD_REPO_NAME=REPLACE_WITH_REPO_NAME
+PROD_HOST=us.hermes
+PROD_USER_SECRET_NAME=PROD_USER
+PROD_SSH_KEY_SECRET_NAME=PROD_SSH_KEY
+PROD_DEPLOY_ROOT=REQUIRES_EXPLICIT_APPROVAL
+PROD_DOMAIN=proletariat.icu
+PROD_FRONTEND_ROUTE=/REPLACE_WITH_REPO_NAME/
+PROD_BACKEND_ROUTE=/REPLACE_WITH_REPO_NAME/api
+PROD_ROUTE=REQUIRES_ROUTE_APPROVAL
+PROD_BACKEND_PORT=REQUIRES_EXPLICIT_APPROVAL
+PROD_FRONTEND_PORT=REQUIRES_EXPLICIT_APPROVAL
+PROD_GITHUB_ENVIRONMENT=production
+PROD_ROLLBACK_RELEASE_ID=REQUIRES_EXPLICIT_RELEASE_ID
+
+# Protected targets and route boundaries.
+# Current approved production planning target is us.hermes, but production
+# implementation still requires separate explicit approval.
+APPROVED_PRODUCTION_HOST=us.hermes
+APPROVED_PRODUCTION_DOMAIN=proletariat.icu
+APPROVED_FRONTEND_ROUTE=/{reponame}/
+APPROVED_BACKEND_ROUTE=/{reponame}/api
+PROTECTED_PRODUCTION_HOSTS=43.130.49.185
+PROTECTED_PRODUCTION_DOMAINS=proletariat.icu,www.proletariat.icu
+PROTECTED_PRODUCTION_ROUTES=/,/api
+ENV
+}
+
+write_production_profile_guard() {
+  write_file scripts/production-profile-guard.sh <<'GUARD'
+#!/usr/bin/env bash
+set -euo pipefail
+
+fail() {
+  echo "FAIL: $*" >&2
+  exit 2
+}
+
+PROD_HOST="${PROD_HOST:-}"
+PROD_DOMAIN="${PROD_DOMAIN:-}"
+PROD_ROUTE="${PROD_ROUTE:-}"
+PROD_REPO_NAME="${PROD_REPO_NAME:-}"
+
+[[ -n "$PROD_HOST" ]] || fail "PROD_HOST is required for production planning validation."
+[[ -n "$PROD_DOMAIN" ]] || fail "PROD_DOMAIN is required for production planning validation."
+[[ -n "$PROD_ROUTE" ]] || fail "PROD_ROUTE is required for production planning validation."
+
+case "$PROD_HOST" in
+  43.130.49.185)
+    fail "raw protected production IP is not allowed as a production target: $PROD_HOST"
+    ;;
+  us.hermes)
+    echo "INFO: us.hermes selected; repo-scoped route guard is required."
+    ;;
+esac
+
+case "$PROD_ROUTE" in
+  /|/api|/api/*)
+    fail "protected production route is not allowed: $PROD_ROUTE"
+    ;;
+esac
+
+case "$PROD_DOMAIN" in
+  proletariat.icu|www.proletariat.icu)
+    [[ -n "$PROD_REPO_NAME" ]] || fail "PROD_REPO_NAME is required for repo-scoped proletariat.icu routes."
+    [[ "$PROD_REPO_NAME" != "REPLACE_WITH_REPO_NAME" ]] || fail "PROD_REPO_NAME must be replaced before route validation."
+    case "$PROD_ROUTE" in
+      "/$PROD_REPO_NAME"|"/$PROD_REPO_NAME/"|"/$PROD_REPO_NAME/api"|"/$PROD_REPO_NAME/api/"|"/$PROD_REPO_NAME/api/"*)
+        ;;
+      *)
+        fail "proletariat.icu production routes must stay under /${PROD_REPO_NAME}/ or /${PROD_REPO_NAME}/api: $PROD_ROUTE"
+        ;;
+    esac
+    ;;
+esac
+
+echo "PASS: production profile guard accepted current placeholder values."
+echo "No deployment, server change, reverse proxy change, or route activation was performed."
+GUARD
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    plan "chmod +x scripts/production-profile-guard.sh"
+  elif [[ -f "$TARGET_DIR/scripts/production-profile-guard.sh" ]]; then
+    chmod +x "$TARGET_DIR/scripts/production-profile-guard.sh"
+  fi
+}
+
+write_production_profile_runbook() {
+  write_file docs/07_runbooks/runbook-production-profile.md <<'RUNBOOK'
+---
+title: "Production Profile Scaffold"
+doc_type: "runbook"
+status: "draft"
+owner: "user"
+source: "agent"
+created: "2026-06-01"
+updated: "2026-06-01"
+related_issue: "#1"
+related_pr: ""
+supersedes: ""
+---
+
+# Purpose
+
+Document the scaffold-only production profile generated by Dogsquard.
+
+This profile prepares production planning assets for an adopted app. It does not add a production deploy workflow, change servers, edit reverse proxies, or expose a public route.
+
+Current approved production planning target:
+
+- host: `us.hermes`
+- frontend route shape: `https://proletariat.icu/{reponame}/`
+- backend route shape: `https://proletariat.icu/{reponame}/api`
+
+This route strategy is approval for planning and scaffold validation only. Production implementation still requires separate explicit approval.
+
+# Scope
+
+Generated assets:
+
+- `.env.dogsquard-production.example`
+- `scripts/production-profile-guard.sh`
+- `docs/07_runbooks/runbook-production-profile.md`
+- `docs/06_testing/test-production-profile.md`
+
+# Required Approval Before Implementation
+
+Production implementation requires separate explicit approval for:
+
+- target app
+- production host
+- route or domain
+- GitHub production environment
+- rollback strategy
+- diagnostics policy
+
+# Protected Targets
+
+Do not target without later explicit implementation approval:
+
+- `43.130.49.185`
+- `www.proletariat.icu`
+- `/`
+- `/api`
+- existing multica containers
+- existing reverse proxy configuration
+
+# Guard Check
+
+The generated guard validates candidate production values without deploying:
+
+```bash
+PROD_HOST=us.hermes \
+PROD_DOMAIN=proletariat.icu \
+PROD_REPO_NAME=dogpdteamreport \
+PROD_ROUTE=/dogpdteamreport \
+scripts/production-profile-guard.sh
+```
+
+The guard must fail for raw protected IPs, root routes, top-level `/api`, and `proletariat.icu` routes outside the approved repo prefix. Passing the guard does not approve implementation or route activation.
+
+# What Not To Do
+
+Do not:
+
+- add `.github/workflows/deploy-production.yml`
+- run production deploy
+- edit server config
+- edit reverse proxy config
+- expose a public URL
+- commit secrets
+- paste raw server config or logs into docs
+RUNBOOK
+}
+
+write_production_profile_test_plan() {
+  write_file docs/06_testing/test-production-profile.md <<'TESTPLAN'
+---
+title: "Production Profile Scaffold Test Plan"
+doc_type: "test"
+status: "draft"
+owner: "user"
+source: "agent"
+created: "2026-06-01"
+updated: "2026-06-01"
+related_issue: "#1"
+related_pr: ""
+supersedes: ""
+---
+
+# Objective
+
+Validate the scaffold-only production profile without implementing production deployment.
+
+# Positive Checks
+
+- production profile docs exist
+- placeholder environment example exists
+- production guard script exists
+- guard accepts approved `us.hermes` plus repo-scoped `proletariat.icu/{reponame}` route values
+- no production workflow exists
+- no public route is activated
+
+# Negative Checks
+
+The guard must reject:
+
+- `PROD_HOST=43.130.49.185`
+- `PROD_DOMAIN=www.proletariat.icu`
+- `PROD_ROUTE=/`
+- `PROD_ROUTE=/api`
+- `PROD_DOMAIN=proletariat.icu` with routes outside `/{reponame}/` or `/{reponame}/api`
+
+# Acceptance Criteria
+
+- local docs checks pass
+- generated repo PR Quality Gate can run
+- no production deploy workflow is generated
+- no server config is committed
+- production implementation remains blocked until separate explicit approval
+TESTPLAN
+}
+
 echo "Governance core:"
 create_docs_structure
 copy_core_governance_docs
@@ -873,6 +1122,7 @@ esac
 
 copy_optional_example_app
 copy_optional_dev_deploy
+copy_optional_production_profile
 
 echo
 if [[ "$DRY_RUN" == "true" ]]; then

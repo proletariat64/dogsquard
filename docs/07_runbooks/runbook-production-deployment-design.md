@@ -85,6 +85,21 @@ Do not target or modify without explicit approval:
 - What secrets and variables are required?
 - What diagnostics are safe to collect?
 
+# Current Route-strategy Decision
+
+The current planning decision is:
+
+- host: `us.hermes`
+- frontend route: `https://proletariat.icu/{reponame}/`
+- backend route: `https://proletariat.icu/{reponame}/api`
+
+This avoids claiming the existing multica routes:
+
+- `https://proletariat.icu/`
+- `https://proletariat.icu/api`
+
+This decision does not authorize implementation, server changes, reverse proxy edits, deploys, or route activation.
+
 # What Not To Do
 
 Do not:

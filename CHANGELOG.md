@@ -134,3 +134,8 @@
 - Browser/manual UI verification guidance for frontend-heavy product PRs.
 - Legacy tracked agent-file adoption guidance.
 - Remote-host e2e opt-in validation guidance.
+- Production deployment PRD.
+- Production deployment BDD scenarios.
+- ADR for approval-gated production deployment profile.
+- Production deployment test plan and design runbook.
+- Topology notes for protected production targets.

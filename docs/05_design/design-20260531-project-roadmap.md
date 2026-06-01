@@ -211,7 +211,7 @@ Current 6E result:
 - append local/private agent file ignores
 - validate profile behavior with `make bootstrap-test`
 
-### Milestone 7: Production Deployment Later
+### Milestone 7: Production Deployment Design
 
 Before starting production design, close the Dogsquard operating-loop follow-up from the first real adopted project.
 
@@ -222,13 +222,24 @@ Operating-loop follow-up scope:
 - old remote-host e2e tests as opt-in validation
 - keeping Dogsquard process improvements separate from product work
 
-Includes:
+Status: current.
+
+Design scope:
 
 - production deployment design
 - approval gate
 - tags and releases
 - `us.hermes` only after explicit route plan
 - no accidental multica impact
+
+Current design direction:
+
+- production deployment is an opt-in profile for adopted apps
+- Dogsquard itself remains the reusable operating kit, not a production service by default
+- production implementation is not approved by design work alone
+- route/domain strategy must protect `proletariat.icu` `/` and `/api`
+- `us.hermes` remains protected until an explicit route plan is approved
+- a dedicated production host remains the lowest-risk option if one is available
 
 ## Open Questions
 

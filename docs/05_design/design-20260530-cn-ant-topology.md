@@ -211,6 +211,22 @@ Current recommendation:
 - defer direct public high-port access until there is a clear need
 - defer reverse proxy and HTTPS until a separate route strategy is approved
 
+## Production Deployment Design Note
+
+`cn.ant` is validated as Dogsquard's first dev deploy target.
+
+Production design may consider whether `cn.ant` should remain dev-only or become a production candidate for adopted apps.
+
+If `cn.ant` is considered for production later, design must keep dev and production isolated:
+
+- separate deploy roots
+- separate environment variables
+- separate runtime ports
+- separate rollback decisions
+- explicit route/domain approval before public exposure
+
+Current `cn.ant` high-port defaults remain dev capability, not production approval.
+
 ## Phase 6C-1 Dev Workflow Design Note
 
 `cn.ant` is the preferred first GitHub Actions dev deploy target.

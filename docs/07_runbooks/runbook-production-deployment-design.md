@@ -25,16 +25,24 @@ Dogsquard has:
 - real `dogpdteamreport` adoption evidence
 - one real post-adoption product feature
 
+Dogsquard has now also proven one production launch through an adopted app:
+
+- proof app: `dogpdteamreport`
+- production host: `us.hermes`
+- frontend route: `https://proletariat.icu/dogpdteamreport/`
+- backend route: `https://proletariat.icu/dogpdteamreport/api`
+- rollback validated and rolled forward to the fixed release
+- existing multica behavior preserved on `www.proletariat.icu` `/` and `/api`
+
 Dogsquard does not yet have:
 
 - production deployment workflow
-- production route strategy
 - production environment approval gate
-- production public URL
+- automatic production route activation
 
-Production deployment design has been completed. The user has explicitly approved production implementation planning only.
+Production deployment design and the first proof launch have been completed. Further production changes still require explicit approval.
 
-This approval does not authorize production implementation, public route activation, reverse proxy edits, or server changes.
+This proof launch does not authorize broad production automation, unapproved public routes, raw server config commits, or changes to existing multica routes.
 
 # Design-only Procedure
 
@@ -131,3 +139,19 @@ Implementation may start only after:
 - rollback strategy is defined
 - secret/variable names are defined without values
 - the user explicitly approves a production implementation PR
+
+# First Launch Operator Lessons
+
+The `dogpdteamreport` launch produced reusable operator lessons:
+
+- verify the active nginx file before editing; `sites-available` and `sites-enabled` may not be symlinked
+- run `nginx -t` before and after route changes
+- reload nginx only after syntax validation
+- keep the route scoped to `/{reponame}` and `/{reponame}/api`
+- validate `/{reponame}/` returns frontend HTML, not a self-redirect
+- validate `/{reponame}/api/health` returns JSON health success
+- validate static assets under the prefix
+- validate existing `www.proletariat.icu` `/` and `/api` behavior after activation
+- validate rollback to a previous release and roll forward to the desired release
+
+Do not commit raw nginx config, raw logs, secrets, or server-specific dumps as evidence.

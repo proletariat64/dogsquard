@@ -5,7 +5,7 @@ status: "draft"
 owner: "user"
 source: "agent"
 created: "2026-05-31"
-updated: "2026-05-31"
+updated: "2026-06-01"
 related_issue: "#1"
 related_pr: ""
 supersedes: ""
@@ -85,3 +85,20 @@ The follow-up trial also found policy gaps:
 - optional npm script detection passed but could print noisy npm lifecycle output.
 
 Dogsquard v0.1.1 fixes address those gaps by making dev deploy default for `node` and `go-js`, keeping docs-only non-deploy by default, generating cn.ant high-port defaults, appending local/private agent ignores, and quieting optional npm script detection.
+
+## First Real Project Operating-loop Follow-up
+
+After `v0.1.1`, Dogsquard was applied to the real `dogpdteamreport` repo and used beyond bootstrap.
+
+The real operating loop confirmed:
+
+- Dogsquard could govern one real product PR after adoption.
+- The generated Node Makefile and PR Quality Gate were usable for product work.
+- Pre-adoption issues could be triaged and closed with source/runtime evidence.
+- Dogsquard process follow-up should stay in Dogsquard, not product PRs.
+
+Additional reusable lessons:
+
+- frontend-heavy product PRs should include scoped browser/manual UI verification evidence when behavior is visible in the browser
+- existing tracked local-agent files should be treated as adoption compatibility, while new local/private agent files remain blocked or ignored
+- old remote-host e2e tests should be opt-in and excluded from default PR gates unless explicitly approved

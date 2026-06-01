@@ -5,7 +5,7 @@ status: "draft"
 owner: "user"
 source: "agent"
 created: "2026-05-31"
-updated: "2026-05-31"
+updated: "2026-06-01"
 related_issue: "#1"
 related_pr: ""
 supersedes: ""
@@ -193,3 +193,21 @@ Avoid:
 - shrinking Issue #1 until the user loses the project picture
 - hiding decisions inside chat only
 - shipping technical behavior without updating relevant docs
+
+## Real Project Operating Loops
+
+After Dogsquard is adopted into a real project, the Control Board should track operating-loop outcomes at milestone level.
+
+An operating loop is larger than one command and smaller than an indefinite product roadmap. It should show whether Dogsquard can guide a real repo through:
+
+- one real product PR
+- stale backlog triage
+- local and PR validation
+- Control Board updates
+- reusable Dogsquard friction capture
+
+Do not split the loop into one PR per stale issue if no code change is needed. Close stale issues with evidence and update the Control Board.
+
+Do not hide Dogsquard follow-up work inside the product repo. If real work exposes reusable template, runbook, or workflow improvements, capture them as a Dogsquard follow-up deliverable.
+
+When moving from an operating loop to production design, keep the board explicit that production implementation remains approval-gated.

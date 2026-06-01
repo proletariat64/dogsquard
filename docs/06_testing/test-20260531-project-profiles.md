@@ -5,7 +5,7 @@ status: "draft"
 owner: "user"
 source: "agent"
 created: "2026-05-31"
-updated: "2026-05-31"
+updated: "2026-06-01"
 related_issue: "#1"
 related_pr: ""
 supersedes: ""
@@ -116,3 +116,47 @@ Validation coverage:
 - `docs-only` apply does not include dev deploy support by default.
 - `INCLUDE_EXAMPLE_APP=true` copies `backend/` and `frontend/` while excluding `node_modules` and build output.
 - `INCLUDE_DEV_DEPLOY=true` copies dev deploy workflow/scripts for docs-only only when requested.
+
+## First Real Project Operating-loop Validation
+
+The real `dogpdteamreport` adoption added a validation layer beyond bootstrap tests.
+
+Operating-loop validation should confirm:
+
+- the adopted repo can merge at least one product PR through its generated workflow
+- stale pre-adoption issues are triaged to closed, fixed, or deferred states
+- the project Control Board remains readable after real work
+- Dogsquard process friction is recorded as Dogsquard follow-up work, not mixed into product changes
+
+### Frontend-heavy Product PR Evidence
+
+For product PRs that affect visible browser behavior, test evidence should include at least one of:
+
+- automated browser check
+- focused manual browser check
+- source evidence plus a local runtime check when browser automation is not practical
+
+Evidence should name the page, workflow, and visible assertions. It should also confirm that production, public routes, and remote deploy targets were not used.
+
+### Legacy Agent-file Compatibility
+
+Adoption validation should distinguish between:
+
+- legacy local/private agent files already tracked before Dogsquard adoption
+- new local/private agent files introduced by the current PR
+
+The default policy is to preserve legacy tracked files until explicitly migrated, while preventing new local/private agent files from entering normal PRs.
+
+### Remote-host E2E Compatibility
+
+Adoption validation should classify old remote-host e2e tests as opt-in checks.
+
+Default local and PR gates should not require:
+
+- SSH access
+- old UAT hosts
+- production-like public URLs
+- `us.hermes`
+- `proletariat.icu`
+
+If a remote-host test remains useful, document a separate manual or explicit opt-in command.

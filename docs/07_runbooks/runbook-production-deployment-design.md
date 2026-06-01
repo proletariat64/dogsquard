@@ -155,3 +155,33 @@ The `dogpdteamreport` launch produced reusable operator lessons:
 - validate rollback to a previous release and roll forward to the desired release
 
 Do not commit raw nginx config, raw logs, secrets, or server-specific dumps as evidence.
+
+# Post-launch Health Investigation
+
+After launch, production health evidence should check both public routes and the expected local upstream.
+
+For a repo-scoped app, verify:
+
+- public frontend route returns the app under `/{reponame}/`
+- public backend health route returns success under `/{reponame}/api/health`
+- existing multica root and `/api` behavior remain preserved
+- the expected local app port is listening
+- localhost health succeeds on the expected base path
+- the current release symlink points at the intended release
+- any PID file matches a live app process
+
+If public routes return HTTP 502, first classify the failure before taking action:
+
+- runtime stopped
+- stale PID file
+- wrong upstream port
+- app running from the wrong working directory
+- app running without the expected base path
+- release symlink or artifact mismatch
+- route/proxy mismatch
+
+Record only safe evidence in issues or docs. Do not paste raw server config, raw logs, secrets, or full environment dumps.
+
+Recovery actions such as app runtime restart, rollback, redeploy, proxy edit, or proxy reload require explicit approval.
+
+Detailed procedure: `docs/07_runbooks/runbook-production-health-investigation.md`.

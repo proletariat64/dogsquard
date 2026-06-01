@@ -7,7 +7,7 @@ DRY_RUN="${DRY_RUN:-true}"
 FORCE="${FORCE:-false}"
 CREATE_TARGET="${CREATE_TARGET:-false}"
 INCLUDE_EXAMPLE_APP="${INCLUDE_EXAMPLE_APP:-false}"
-INCLUDE_DEV_DEPLOY="${INCLUDE_DEV_DEPLOY:-false}"
+INCLUDE_DEV_DEPLOY_INPUT="${INCLUDE_DEV_DEPLOY:-}"
 
 usage() {
   cat <<'USAGE'
@@ -21,14 +21,16 @@ Defaults:
   FORCE=false
   CREATE_TARGET=false
   INCLUDE_EXAMPLE_APP=false
-  INCLUDE_DEV_DEPLOY=false
+  INCLUDE_DEV_DEPLOY=true for PROJECT_TYPE=node and PROJECT_TYPE=go-js
+  INCLUDE_DEV_DEPLOY=false for PROJECT_TYPE=docs-only
 
 Examples:
   PROJECT_TYPE=node TARGET_DIR=../app scripts/bootstrap-project.sh
   PROJECT_TYPE=node TARGET_DIR=../app DRY_RUN=false scripts/bootstrap-project.sh
   PROJECT_TYPE=node TARGET_DIR=../app DRY_RUN=false FORCE=true scripts/bootstrap-project.sh
+  PROJECT_TYPE=node TARGET_DIR=../app DRY_RUN=false INCLUDE_DEV_DEPLOY=false scripts/bootstrap-project.sh
   PROJECT_TYPE=go-js TARGET_DIR=../app DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/bootstrap-project.sh
-  PROJECT_TYPE=go-js TARGET_DIR=../app DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/bootstrap-project.sh
+  PROJECT_TYPE=docs-only TARGET_DIR=../app DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/bootstrap-project.sh
 USAGE
 }
 
@@ -53,6 +55,15 @@ case "$PROJECT_TYPE" in
   node|go-js|docs-only) ;;
   *) fail "PROJECT_TYPE must be node, go-js, or docs-only." ;;
 esac
+
+if [[ -z "$INCLUDE_DEV_DEPLOY_INPUT" ]]; then
+  case "$PROJECT_TYPE" in
+    node|go-js) INCLUDE_DEV_DEPLOY="true" ;;
+    docs-only) INCLUDE_DEV_DEPLOY="false" ;;
+  esac
+else
+  INCLUDE_DEV_DEPLOY="$INCLUDE_DEV_DEPLOY_INPUT"
+fi
 
 validate_bool DRY_RUN "$DRY_RUN"
 validate_bool FORCE "$FORCE"
@@ -285,6 +296,9 @@ CHANGELOG
 write_gitignore_if_missing() {
   write_file .gitignore <<'GITIGNORE'
 .claude/
+AGENTS.md
+CLAUDE.md
+roster.md
 *.local
 .env.local
 dist/
@@ -294,6 +308,47 @@ frontend/node_modules/
 frontend/playwright-report/
 frontend/test-results/
 GITIGNORE
+}
+
+ensure_local_private_ignores() {
+  if [[ ! -f "$TARGET_DIR/.gitignore" ]]; then
+    write_gitignore_if_missing
+    return
+  fi
+
+  local entries=(
+    ".claude/"
+    "AGENTS.md"
+    "CLAUDE.md"
+    "roster.md"
+  )
+  local missing=()
+
+  local entry
+  for entry in "${entries[@]}"; do
+    if grep -Fxq "$entry" "$TARGET_DIR/.gitignore"; then
+      echo "SKIP .gitignore already contains: $entry"
+    else
+      missing+=("$entry")
+    fi
+  done
+
+  if [[ "${#missing[@]}" -eq 0 ]]; then
+    return
+  fi
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    plan "preserve existing .gitignore and append Dogsquard local/private agent file section"
+    for entry in "${missing[@]}"; do
+      plan "append to .gitignore: $entry"
+    done
+    return
+  fi
+
+  {
+    printf '\n# Dogsquard local/private agent files\n'
+    printf '%s\n' "${missing[@]}"
+  } >> "$TARGET_DIR/.gitignore"
 }
 
 write_docs_only_makefile() {
@@ -335,7 +390,7 @@ write_node_makefile() {
   write_file Makefile <<'MAKEFILE'
 SHELL := /bin/bash
 
-.PHONY: help install build test lint doc-check doc-guard agent-docs release-check
+.PHONY: help install build test lint doc-check doc-guard agent-docs has-npm-script release-check
 
 help:
 	@echo "Available commands:"
@@ -352,24 +407,32 @@ help:
 install:
 	@if [[ -f package-lock.json ]]; then npm ci; else npm install; fi
 
+has-npm-script:
+	@node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts[process.env.SCRIPT] ? 0 : 1)"
+
 build:
 	@set -euo pipefail; \
-	if npm run | grep -qE '^  build$$'; then \
+	if SCRIPT=build $(MAKE) --no-print-directory has-npm-script >/dev/null 2>&1; then \
 		npm run build; \
 	else \
 		echo "No npm build script configured; skipping build."; \
 	fi
 
 test:
-	@npm test
+	@set -euo pipefail; \
+	if SCRIPT=test $(MAKE) --no-print-directory has-npm-script >/dev/null 2>&1; then \
+		npm test; \
+	else \
+		echo "No npm test script configured; skipping tests."; \
+	fi
 
 lint:
 	@set -euo pipefail; \
-	if npm run | grep -qE '^  lint$$'; then \
+	if SCRIPT=lint $(MAKE) --no-print-directory has-npm-script >/dev/null 2>&1; then \
 		npm run lint; \
 	else \
 		echo "No npm lint script configured; using build as validation fallback."; \
-		if npm run | grep -qE '^  build$$'; then npm run build; else echo "No npm build fallback configured; skipping lint."; fi; \
+		if SCRIPT=build $(MAKE) --no-print-directory has-npm-script >/dev/null 2>&1; then npm run build; else echo "No npm build fallback configured; skipping lint."; fi; \
 	fi
 
 doc-check:
@@ -482,6 +545,9 @@ jobs:
       - name: Check local-only files
         run: |
           test ! -d .claude
+          test ! -f AGENTS.md
+          test ! -f CLAUDE.md
+          test ! -f roster.md
           test ! -f .env.local
 
   docs-quality:
@@ -542,6 +608,9 @@ jobs:
       - name: Check local-only files
         run: |
           test ! -d .claude
+          test ! -f AGENTS.md
+          test ! -f CLAUDE.md
+          test ! -f roster.md
           test ! -f .env.local
           test ! -d node_modules
           test ! -d dist
@@ -615,6 +684,9 @@ jobs:
       - name: Check local-only files
         run: |
           test ! -d .claude
+          test ! -f AGENTS.md
+          test ! -f CLAUDE.md
+          test ! -f roster.md
           test ! -f .env.local
           test ! -d node_modules
           test ! -d frontend/node_modules
@@ -694,7 +766,7 @@ copy_optional_example_app() {
 copy_optional_dev_deploy() {
   if [[ "$INCLUDE_DEV_DEPLOY" == "true" ]]; then
     echo
-    echo "Optional dev deploy assets:"
+    echo "Dev deploy assets:"
     copy_file .github/workflows/deploy-dev.yml .github/workflows/deploy-dev.yml
     copy_file scripts/deploy-dev.sh scripts/deploy-dev.sh
     copy_file scripts/package-release.sh scripts/package-release.sh
@@ -702,10 +774,74 @@ copy_optional_dev_deploy() {
     copy_file scripts/remote-runtime.sh scripts/remote-runtime.sh
     copy_file scripts/runtime-dev.sh scripts/runtime-dev.sh
     copy_file scripts/server-preflight.sh scripts/server-preflight.sh
+    write_dev_high_port_env
+    write_dev_high_port_runbook
   else
     echo
-    echo "SKIP optional dev deploy assets: set INCLUDE_DEV_DEPLOY=true to copy deploy workflow and deploy scripts."
+    echo "SKIP dev deploy assets: INCLUDE_DEV_DEPLOY=false."
   fi
+}
+
+write_dev_high_port_env() {
+  write_file .env.dogsquard-dev.example <<'ENV'
+# Dogsquard dev access defaults.
+# These values are examples only; keep real secrets in GitHub environment secrets.
+
+DEV_HOST=cn.ant
+DEV_DEPLOY_ROOT=~/apps/dogsquard-dev
+DEV_FRONTEND_PUBLIC_PORT=8173
+DEV_BACKEND_PUBLIC_PORT=8180
+DEV_FRONTEND_INTERNAL_PORT=14173
+DEV_BACKEND_INTERNAL_PORT=18080
+DEV_PUBLIC_ACCESS_MODE=high-port
+ENV
+}
+
+write_dev_high_port_runbook() {
+  write_file docs/07_runbooks/runbook-dev-high-port-access.md <<'RUNBOOK'
+---
+title: "Dev High-port Access"
+doc_type: "runbook"
+status: "draft"
+owner: "user"
+source: "agent"
+created: "2026-05-31"
+updated: "2026-05-31"
+related_issue: "#1"
+related_pr: ""
+supersedes: ""
+---
+
+# Dev High-port Access
+
+## Purpose
+
+Document the default Dogsquard dev access shape generated for applicable bootstrap profiles.
+
+## Current Dev Target
+
+- Dev host: `cn.ant`
+- Firewall allows: `80`, `22`, `443`, `8000-8999`, and ICMP.
+- Frontend public/dev candidate port: `8173`
+- Backend public/dev candidate port: `8180`
+
+## Scope
+
+High-port access is for dev validation only.
+
+Do not use this as production deployment.
+Do not target `us.hermes`.
+Do not claim `proletariat.icu` `/` or `/api`.
+Do not commit secrets.
+
+## Future Route Option
+
+A future HTTP-only dev route may use a path under `dev.proletariat.icu/xxxx` on `cn.ant`, after explicit routing design.
+
+## Production Separation
+
+Production deployment remains separate and requires explicit approval before implementation.
+RUNBOOK
 }
 
 echo "Governance core:"
@@ -715,7 +851,7 @@ copy_governance_scripts
 copy_github_templates
 write_starter_readme_if_missing
 write_starter_changelog_if_missing
-write_gitignore_if_missing
+ensure_local_private_ignores
 
 echo
 echo "Profile assets:"

@@ -70,10 +70,16 @@ Optional example app material remains opt-in:
 PROJECT_TYPE=go-js TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/bootstrap-project.sh
 ```
 
-Optional dev deploy material remains opt-in:
+Dev deploy material is included by default for `node` and `go-js` profiles. Disable it explicitly when a target should receive governance only:
 
 ```bash
-PROJECT_TYPE=go-js TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/bootstrap-project.sh
+PROJECT_TYPE=node TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_DEV_DEPLOY=false scripts/bootstrap-project.sh
+```
+
+Docs-only repositories do not receive dev deploy material by default, but it can still be requested explicitly:
+
+```bash
+PROJECT_TYPE=docs-only TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/bootstrap-project.sh
 ```
 
 The Makefile wrapper is:
@@ -97,16 +103,19 @@ make bootstrap-test
 - Add issue and PR templates.
 - Generate npm-based Makefile commands.
 - Generate PR Quality Gate with Shell Check, Repository Hygiene, Node Quality, and PR Quality Summary.
+- Generate dev deploy support by default.
+- Generate cn.ant high-port dev defaults with frontend port `8173` and backend port `8180`.
 - Add runtime placeholders such as `data/.gitkeep` only when needed.
 - Do not copy Dogsquard example app.
-- Do not copy dev deploy workflow by default.
+- Allow dev deploy assets to be disabled with `INCLUDE_DEV_DEPLOY=false`.
 
 ## PROJECT_TYPE=go-js Expected Steps
 
 - Preserve existing `backend/` and `frontend/`.
 - Generate Go and frontend validation commands.
 - Keep Playwright smoke optional.
-- Keep dev deployment assets opt-in.
+- Generate dev deploy support by default.
+- Generate cn.ant high-port dev defaults with frontend port `8173` and backend port `8180`.
 - Generate PR Quality Gate with Shell Check, Repository Hygiene, Go/JS Quality, and PR Quality Summary.
 
 ## PROJECT_TYPE=docs-only Expected Steps
@@ -116,6 +125,7 @@ make bootstrap-test
 - Generate doc-check and doc-guard scripts.
 - Generate documentation-only Makefile commands.
 - Generate PR Quality Gate with shell, repository hygiene, docs quality, and summary jobs.
+- Keep dev deployment assets disabled by default unless `INCLUDE_DEV_DEPLOY=true`.
 - Do not require Go, npm, Playwright, deployment, or runtime scripts.
 
 ## Preserve Existing Repo Content
@@ -137,9 +147,27 @@ If a target repo already has `README.md`, bootstrap should add a short Dogsquard
 
 The Dogsquard example app is validation material. It should be copied only when the user explicitly asks for example app material.
 
-## Do Not Copy Deploy Workflow By Default
+## Deploy Workflow Defaults
 
-Deployment requires host, route, secrets, and runtime decisions. Dev deploy workflow should be opt-in.
+Docs-only repositories should not receive deploy workflow by default.
+
+For `node` and `go-js`, dev deploy support is now default Dogsquard bootstrap content because the current Control Board treats cn.ant dev deployment and high-port access as baseline template capabilities. The generated material is still dev-only and does not add production deployment.
+
+## Dev High-port Defaults
+
+Applicable profiles generate:
+
+- `.env.dogsquard-dev.example`
+- `docs/07_runbooks/runbook-dev-high-port-access.md`
+
+Default dev access values:
+
+- dev host: `cn.ant`
+- firewall range: `8000-8999`
+- frontend public/dev candidate port: `8173`
+- backend public/dev candidate port: `8180`
+
+These values are development defaults only. They must not be used to target `us.hermes`, `proletariat.icu` root, `proletariat.icu/api`, or production.
 
 ## Post-bootstrap Validation Commands
 
@@ -180,7 +208,16 @@ Dogsquard validates the profile-aware bootstrap behavior with:
 make bootstrap-test
 ```
 
-The test script creates temporary targets, exercises dry-run and apply mode, verifies existing README preservation, checks generated Makefile and PR Quality Gate files, verifies docs folders and core governance docs, runs `make doc-check` in generated docs-only and node targets, and confirms optional example app and dev deploy assets remain opt-in.
+The test script creates temporary targets, exercises dry-run and apply mode, verifies existing README preservation, checks generated Makefile and PR Quality Gate files, verifies docs folders and core governance docs, runs `make doc-check` in generated docs-only and node targets, confirms optional example app remains opt-in, and checks deploy defaults per profile.
+
+Current validation also confirms:
+
+- `PROJECT_TYPE=node` includes dev deploy by default.
+- `PROJECT_TYPE=node` can disable dev deploy with `INCLUDE_DEV_DEPLOY=false`.
+- `PROJECT_TYPE=go-js` includes dev deploy by default.
+- `PROJECT_TYPE=docs-only` excludes dev deploy by default.
+- existing `.gitignore` files are preserved and appended with local/private agent file ignores.
+- generated Node Makefile optional script detection avoids noisy npm lifecycle errors.
 
 ## Trial Repo Lessons
 

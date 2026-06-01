@@ -72,3 +72,16 @@ The Node profile should generate npm-based Makefile and PR Quality Gate assets w
 - Keep dry-run default.
 - Preserve existing files unless explicit overwrite is requested.
 - Add profile tests using the dogpdteamreport trial as evidence.
+
+## v0.1.1 Bootstrap Trial Follow-up
+
+A follow-up `PROJECT_TYPE=node` trial against `dogpdteamreport-dogsquard-trial` confirmed that the profile-aware bootstrap generated a usable Node Makefile and PR Quality Gate without manual Makefile or CI adaptation.
+
+The follow-up trial also found policy gaps:
+
+- dev deploy remained opt-in instead of default for the Node profile.
+- cn.ant high-port defaults were not generated.
+- existing `.gitignore` files needed appended ignores for `AGENTS.md`, `CLAUDE.md`, and `roster.md`.
+- optional npm script detection passed but could print noisy npm lifecycle output.
+
+Dogsquard v0.1.1 fixes address those gaps by making dev deploy default for `node` and `go-js`, keeping docs-only non-deploy by default, generating cn.ant high-port defaults, appending local/private agent ignores, and quieting optional npm script detection.

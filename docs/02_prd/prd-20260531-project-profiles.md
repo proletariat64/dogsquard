@@ -31,7 +31,8 @@ The user, as a solo developer using agent-heavy vibe coding.
 
 - Support project-type specific bootstrap.
 - Preserve existing project files.
-- Avoid copying irrelevant example app or deploy workflow assets.
+- Avoid copying irrelevant example app assets.
+- Include dev deploy support by default for applicable app profiles.
 - Generate correct Makefile and PR Quality Gate behavior for each profile.
 - Keep governance docs consistent across repos.
 - Reduce cognitive load when starting or adopting new repositories.
@@ -65,7 +66,9 @@ Expected bootstrap behavior:
 - Treat lint as optional: run `npm run lint` if present, otherwise print a clear skip or build-validation message.
 - Generate a PR Quality Gate with Node Quality instead of Go/backend checks.
 - Do not copy the Dogsquard Go example app.
-- Do not copy the dev deploy workflow by default.
+- Copy dev deploy support by default.
+- Generate cn.ant high-port dev defaults with frontend `8173` and backend `8180`.
+- Allow dev deploy support to be disabled with `INCLUDE_DEV_DEPLOY=false`.
 
 ### PROJECT_TYPE=go-js
 
@@ -83,7 +86,8 @@ Expected bootstrap behavior:
 - Preserve backend and frontend when present.
 - Generate Makefile targets for Go tests and frontend build.
 - Keep Playwright smoke optional and profile-aware.
-- Keep dev deploy optional rather than default.
+- Copy dev deploy support by default.
+- Generate cn.ant high-port dev defaults with frontend `8173` and backend `8180`.
 - Use Go and Node setup in PR Quality Gate only when the relevant directories are present or requested.
 
 ### PROJECT_TYPE=docs-only
@@ -96,6 +100,7 @@ Expected bootstrap behavior:
 - Copy doc-check and doc-guard scripts.
 - Generate a Makefile with documentation commands only.
 - Generate a PR Quality Gate that does not assume app source, Go, Node, Playwright, or deployment.
+- Do not include dev deploy support by default.
 
 ### Optional Future: PROJECT_TYPE=go-only
 
@@ -146,7 +151,7 @@ Potential behavior:
 ### Skip By Profile
 
 - Do not copy Dogsquard example app unless requested.
-- Do not copy deploy workflow unless deployment profile is enabled.
+- Do not copy deploy workflow for docs-only repos unless deployment is explicitly enabled.
 - Do not copy server topology docs into unrelated repos by default.
 - Do not copy tool/session-local files.
 
@@ -164,7 +169,12 @@ Profiles may need safe placeholders for ignored runtime directories. For Node re
 - Bootstrap dry-run is available and safe by default.
 - Existing files are preserved unless `FORCE=true`.
 - Generated Makefile and PR Quality Gate are profile-appropriate.
-- Example app and dev deploy assets remain opt-in.
+- Example app assets remain opt-in.
+- Dev deploy assets are default for `PROJECT_TYPE=node` and `PROJECT_TYPE=go-js`.
+- Dev deploy assets are not default for `PROJECT_TYPE=docs-only`.
+- cn.ant high-port defaults are generated for applicable dev deploy profiles.
+- Local/private agent files are ignored by default.
+- Optional npm script detection is quiet when scripts are absent.
 - Bootstrap behavior is covered by `make bootstrap-test`.
 - Bootstrap strategy avoids destructive overwrite.
 - `dogpdteamreport` trial findings are captured.

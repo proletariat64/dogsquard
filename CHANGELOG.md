@@ -125,3 +125,8 @@
 - Bootstrap dry-run and no-overwrite safety defaults.
 - Bootstrap test script and Makefile target.
 - Project bootstrap runbook and project profile test plan updates.
+- Dev deploy defaults for `node` and `go-js` bootstrap profiles.
+- cn.ant high-port dev defaults for bootstrap output.
+- Default local/private agent file ignores in bootstrap output.
+- Quieter optional npm script detection in generated Node Makefile.
+- v0.1.1 bootstrap trial gap documentation updates.

@@ -151,3 +151,5 @@
 - Canonical profile-aware bootstrap documentation.
 - Production safety guard replacing the temporary scope guard.
 - Explicit `www.proletariat.icu` rejection in generated production profile guard tests.
+- Production health investigation runbook.
+- Post-launch health evidence pattern for runtime/upstream mismatch.

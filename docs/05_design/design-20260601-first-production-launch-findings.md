@@ -114,3 +114,33 @@ Future Dogsquard work may generate route snippets or operator checklists, but ro
 - Add deploy-root expansion checks to production script templates if Dogsquard later generates full production scripts.
 - Add active reverse proxy file discovery to the production route activation runbook.
 - Keep raw server config, raw logs, and secrets out of repository history.
+
+# Post-launch Health Evidence
+
+The first post-launch health check found a production health regression after the initial successful launch:
+
+- `https://proletariat.icu/dogpdteamreport/` returned HTTP 502
+- `https://proletariat.icu/dogpdteamreport/api/health` returned HTTP 502
+- `https://www.proletariat.icu/auth.html` still returned the multica access page
+- the existing multica API route remained separate from the `dogpdteamreport` route
+
+Safe read-only investigation found:
+
+- the expected Dogsquard production runtime bind was `127.0.0.1:18987`
+- no process was listening on `127.0.0.1:18987`
+- the production release symlink pointed at `20260601131820-67b0897f3892`
+- the release manifest recorded `base_path=/dogpdteamreport`
+- a separate Node process was running from a dev checkout on port `9999`
+- localhost `:9999` answered `/api/health`, but not `/dogpdteamreport/api/health`
+- the production PID file did not match the live app process
+
+The likely failure class is runtime/upstream mismatch: the approved route had no healthy app process on the expected local production port.
+
+The recommended recovery path is to restart the approved production runtime from the current release on the expected local bind, then recheck the public frontend and backend health routes. That recovery still requires explicit approval. The investigation did not deploy, rollback, restart services, edit reverse proxy config, touch multica, or capture raw logs/config.
+
+Reusable lesson:
+
+- post-launch health evidence must include both public route checks and expected-local-upstream checks
+- PID-file consistency belongs in the standard production health investigation flow
+- app Control Boards should track the incident issue, suspected failure class, and approved next recovery action
+- raw logs and server config should stay out of GitHub issues and docs

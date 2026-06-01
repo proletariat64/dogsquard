@@ -5,7 +5,7 @@ status: "draft"
 owner: "user"
 source: "agent"
 created: "2026-05-31"
-updated: "2026-05-31"
+updated: "2026-06-01"
 related_issue: "#1"
 related_pr: ""
 supersedes: ""
@@ -226,3 +226,68 @@ Current validation also confirms:
 - Runtime ignored directories may need committed `.gitkeep` placeholders.
 - Legacy external-host tests should not be part of default local gates unless the environment is available.
 - Historical bug-expectation tests may need review during adoption.
+
+## Operating-loop Lessons
+
+The first real-project operating loop in `dogpdteamreport` showed that adoption does not end after bootstrap and PR Quality Gate installation.
+
+After adoption, agents should expect a short operating-loop follow-up:
+
+1. Merge at least one real product PR through the adopted workflow.
+2. Triage stale or pre-adoption product issues.
+3. Close issues that are already fixed with concrete evidence.
+4. Record reusable Dogsquard friction as Dogsquard follow-up work instead of mixing it into product PRs.
+
+### Browser-visible Product Changes
+
+For frontend-heavy product PRs, local tests may not prove the visible behavior.
+
+Use scoped browser or manual UI verification when a PR changes or verifies:
+
+- navigation labels
+- visible form controls
+- layout behavior
+- modal, inline editor, or dropdown state
+- product workflows that are primarily browser-facing
+
+Record enough evidence for review:
+
+- page or workflow tested
+- local URL or environment
+- browser method, such as Playwright, system Chromium, or manual browser check
+- visible assertions that passed
+- whether the check used a temporary local database
+- confirmation that production, remote deploy, and public routes were untouched
+
+Do not turn every UI check into a separate PR. Keep browser verification attached to the product PR or operating-loop triage that needs it.
+
+### Legacy Tracked Agent Files
+
+New Dogsquard bootstrap output should ignore local/private agent files by default:
+
+- `.claude/`
+- `AGENTS.md`
+- `CLAUDE.md`
+- `roster.md`
+
+Existing repositories may already track one or more of those files. Adoption should preserve them unless the user explicitly approves migration.
+
+Recommended adoption behavior:
+
+- document legacy tracked agent files in adoption findings
+- block newly introduced local/private agent files in ordinary PRs
+- do not fail an adoption solely because a legacy file is already tracked
+- do not clean up legacy tracked agent files inside unrelated product PRs
+
+### Legacy Remote-host E2E Tests
+
+Some existing projects have e2e tests that target old UAT hosts, SSH aliases, or public URLs.
+
+Default Dogsquard validation should stay local and deterministic. Remote-host e2e tests should be opt-in unless the user explicitly approves that environment for the PR.
+
+Recommended adoption behavior:
+
+- exclude remote-host e2e tests from default `make release-check` and PR Quality Gate
+- document the old target and how to run the test manually
+- add an explicit opt-in command only when the test remains useful
+- never require production, `us.hermes`, or `proletariat.icu` access for default PR validation

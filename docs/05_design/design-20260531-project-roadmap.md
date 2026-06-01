@@ -5,7 +5,7 @@ status: "draft"
 owner: "user"
 source: "agent"
 created: "2026-05-31"
-updated: "2026-05-31"
+updated: "2026-06-01"
 related_issue: "#1"
 related_pr: ""
 supersedes: ""
@@ -212,6 +212,15 @@ Current 6E result:
 - validate profile behavior with `make bootstrap-test`
 
 ### Milestone 7: Production Deployment Later
+
+Before starting production design, close the Dogsquard operating-loop follow-up from the first real adopted project.
+
+Operating-loop follow-up scope:
+
+- browser/manual UI verification expectations for frontend-heavy product PRs
+- legacy tracked agent-file handling during adoption
+- old remote-host e2e tests as opt-in validation
+- keeping Dogsquard process improvements separate from product work
 
 Includes:
 

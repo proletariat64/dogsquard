@@ -130,3 +130,7 @@
 - Default local/private agent file ignores in bootstrap output.
 - Quieter optional npm script detection in generated Node Makefile.
 - v0.1.1 bootstrap trial gap documentation updates.
+- First real-project operating-loop findings.
+- Browser/manual UI verification guidance for frontend-heavy product PRs.
+- Legacy tracked agent-file adoption guidance.
+- Remote-host e2e opt-in validation guidance.

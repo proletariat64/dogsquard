@@ -32,6 +32,10 @@ Dogsquard does not yet have:
 - production environment approval gate
 - production public URL
 
+Production deployment design has been completed. The user has explicitly approved production implementation planning only.
+
+This approval does not authorize production implementation, public route activation, reverse proxy edits, or server changes.
+
 # Design-only Procedure
 
 1. Confirm Issue #1 says production implementation is approval-gated.
@@ -41,6 +45,22 @@ Dogsquard does not yet have:
 5. Define required configuration names only.
 6. Define health, rollback, and diagnostics expectations.
 7. Stop before any implementation or server change.
+
+# Implementation Planning Procedure
+
+Use this procedure after production implementation planning is approved:
+
+1. Confirm planning approval is recorded in Issue #1.
+2. Identify the first adopted app candidate.
+3. Select candidate host options without touching servers.
+4. List approved and blocked route options.
+5. Define GitHub environment, secret, and variable names without values.
+6. Define protected target guard behavior.
+7. Define production health, rollback, and diagnostics behavior.
+8. Decide whether the next PR is a scaffold-only PR or an implementation PR.
+9. Stop before adding production workflow files, server config, or public routes unless separately approved.
+
+Planning may produce docs, checklists, and future implementation scope. It must not deploy.
 
 # Protected Targets
 
@@ -78,6 +98,13 @@ Do not:
 - commit raw server config
 - use old UAT assumptions as production design
 
+Production implementation planning also must not:
+
+- treat planning approval as route approval
+- treat planning approval as `us.hermes` approval
+- reuse dev deploy settings as production settings without an explicit production profile
+- add production behavior to every Dogsquard bootstrap profile by default
+
 # Future Implementation Entry Criteria
 
 Implementation may start only after:
@@ -88,3 +115,4 @@ Implementation may start only after:
 - approval gate is defined
 - rollback strategy is defined
 - secret/variable names are defined without values
+- the user explicitly approves a production implementation PR

@@ -139,3 +139,5 @@
 - ADR for approval-gated production deployment profile.
 - Production deployment test plan and design runbook.
 - Topology notes for protected production targets.
+- Production implementation planning document.
+- Production implementation planning runbook and test-plan updates.

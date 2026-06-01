@@ -241,8 +241,38 @@ Current design direction:
 - `us.hermes` remains protected until an explicit route plan is approved
 - a dedicated production host remains the lowest-risk option if one is available
 
+### Milestone 7A: Production Implementation Planning
+
+Status: current.
+
+The user has explicitly approved production implementation planning only.
+
+Planning scope:
+
+- convert production design into a future implementation scope
+- list required target, host, route, and approval decisions
+- define protected target and route guardrails
+- define safe PR sequencing
+- keep implementation blocked until separately approved
+
+Planning exclusions:
+
+- no production workflow implementation
+- no production deploy
+- no server or reverse proxy changes
+- no public route exposure
+- no `us.hermes` activation
+
+Recommended next step after planning:
+
+- if implementation is approved, open one focused production profile scaffold PR
+- if implementation is deferred, return to product feature work or Dogsquard hardening
+
 ## Open Questions
 
 - When should Dogsquard become a reusable template release?
 - Do we need direct high-port access on `cn.ant` later?
 - Do we need a dev domain or subdomain later?
+- Which adopted app should be the first production implementation target?
+- Which production host and route are approved?
+- Should the first implementation PR be scaffold-only or include a production workflow?

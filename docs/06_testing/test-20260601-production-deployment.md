@@ -26,6 +26,18 @@ This phase should validate:
 - no public URL is exposed
 - `us.hermes` and `proletariat.icu` protections are documented
 
+# Planning-phase Validation
+
+Production implementation planning should validate:
+
+- planning approval is documented without implying implementation approval
+- required implementation decisions are listed
+- target host and route decisions remain unresolved unless explicitly approved
+- no production workflow is added
+- no server or reverse proxy config is changed
+- no deploy command is run
+- protected targets remain blocked by policy
+
 # Future Implementation Validation
 
 Future approved implementation should validate:
@@ -65,3 +77,10 @@ For a future implementation PR:
 - environment protection is configured
 - approval gate is documented
 - rollback is tested before public exposure
+
+For the implementation planning PR:
+
+- local docs checks pass
+- PR Quality Gate passes
+- planning scope is documented
+- implementation remains blocked until separate explicit approval

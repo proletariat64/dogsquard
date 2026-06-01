@@ -38,6 +38,13 @@ Production implementation planning should validate:
 - no deploy command is run
 - protected targets remain blocked by policy
 
+Current planning evidence:
+
+- `us.hermes` is selected as the first production planning target.
+- `proletariat.icu/{reponame}/` is the approved frontend route shape.
+- `proletariat.icu/{reponame}/api` is the approved backend route shape.
+- production implementation remains unapproved.
+
 # Future Implementation Validation
 
 Future approved implementation should validate:
@@ -53,10 +60,10 @@ Future approved implementation should validate:
 
 Future tests must confirm production deploy does not:
 
-- target `us.hermes` without explicit route approval
-- target `43.130.49.185` without explicit route approval
+- target raw `43.130.49.185`
 - claim `proletariat.icu` `/`
 - claim `proletariat.icu` `/api`
+- claim a `proletariat.icu` route outside the approved `/{reponame}/` prefix
 - restart nginx, caddy, traefik, or multica by default
 - require sudo in the default path
 - commit secrets or raw server output

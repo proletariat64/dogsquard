@@ -103,13 +103,22 @@ This still requires separation from dev deploy roots, explicit production ports,
 
 Highest risk because it hosts multica through `proletariat.icu`.
 
-Only consider after explicit route approval that preserves:
+Approved for production planning after the user selected `us.hermes` as the first production target.
+
+Approved route shape:
+
+- frontend: `https://proletariat.icu/{reponame}/`
+- backend: `https://proletariat.icu/{reponame}/api`
+
+This route shape preserves:
 
 - `/`
 - `/api`
 - multica frontend
 - multica backend
 - reverse proxy configuration
+
+It does not approve implementation, reverse proxy edits, server changes, or public route activation.
 
 # Implementation Guardrails
 
@@ -141,6 +150,14 @@ Suggested scope:
 - add generated production runbook content for adopted apps
 - do not activate public route
 - do not deploy to production
+
+Implemented scaffold shape:
+
+- `INCLUDE_PRODUCTION_PROFILE=true` generates planning-only production scaffold assets during bootstrap
+- generated production environment example contains placeholder names only
+- generated guard script accepts the approved `us.hermes` plus repo-scoped `proletariat.icu/{reponame}` route shape and rejects route collisions
+- no production deploy workflow is generated
+- no server or route behavior is changed
 
 # Acceptance Criteria
 

@@ -141,3 +141,6 @@
 - Topology notes for protected production targets.
 - Production implementation planning document.
 - Production implementation planning runbook and test-plan updates.
+- Scaffold-only production profile bootstrap option.
+- Production profile placeholder env, runbook, test plan, and protected-target guard.
+- Production route-strategy decision for `us.hermes` using `proletariat.icu/{reponame}/` and `proletariat.icu/{reponame}/api`.

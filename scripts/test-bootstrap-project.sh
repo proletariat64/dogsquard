@@ -66,6 +66,8 @@ assert_contains "$docs_target/.gitignore" "^AGENTS.md$"
 assert_contains "$docs_target/.gitignore" "^CLAUDE.md$"
 assert_contains "$docs_target/.gitignore" "^roster.md$"
 assert_not_exists "$docs_target/.github/workflows/deploy-dev.yml"
+assert_not_exists "$docs_target/.github/workflows/deploy-production.yml"
+assert_not_exists "$docs_target/.env.dogsquard-production.example"
 assert_readme_preserved "$docs_target"
 (cd "$docs_target" && make doc-check >/dev/null)
 
@@ -96,6 +98,8 @@ assert_file "$node_target/.github/workflows/deploy-dev.yml"
 assert_file "$node_target/scripts/deploy-dev.sh"
 assert_file "$node_target/docs/07_runbooks/runbook-dev-high-port-access.md"
 assert_file "$node_target/.env.dogsquard-dev.example"
+assert_not_exists "$node_target/.github/workflows/deploy-production.yml"
+assert_not_exists "$node_target/.env.dogsquard-production.example"
 assert_file "$node_target/docs/02_prd/prd-20260530-document-governance.md"
 assert_file "$node_target/data/.gitkeep"
 assert_dir "$node_target/source"
@@ -171,5 +175,38 @@ mkdir -p "$deploy_target"
 PROJECT_TYPE=docs-only TARGET_DIR="$deploy_target" DRY_RUN=false INCLUDE_DEV_DEPLOY=true "$ROOT_DIR/scripts/bootstrap-project.sh"
 assert_file "$deploy_target/.github/workflows/deploy-dev.yml"
 assert_file "$deploy_target/scripts/deploy-dev.sh"
+
+production_target="$TMP_ROOT/production"
+mkdir -p "$production_target"
+printf '# Existing Project README\n' > "$production_target/README.md"
+cat > "$production_target/package.json" <<'JSON'
+{
+  "name": "production-target",
+  "scripts": {
+    "test": "node --test"
+  }
+}
+JSON
+
+PROJECT_TYPE=node TARGET_DIR="$production_target" DRY_RUN=false INCLUDE_PRODUCTION_PROFILE=true "$ROOT_DIR/scripts/bootstrap-project.sh"
+assert_file "$production_target/.env.dogsquard-production.example"
+assert_file "$production_target/scripts/production-profile-guard.sh"
+assert_file "$production_target/docs/07_runbooks/runbook-production-profile.md"
+assert_file "$production_target/docs/06_testing/test-production-profile.md"
+assert_not_exists "$production_target/.github/workflows/deploy-production.yml"
+assert_contains "$production_target/.env.dogsquard-production.example" "PROD_HOST=us.hermes"
+assert_contains "$production_target/.env.dogsquard-production.example" "PROD_FRONTEND_ROUTE=/REPLACE_WITH_REPO_NAME/"
+assert_contains "$production_target/docs/07_runbooks/runbook-production-profile.md" "does not add a production deploy workflow"
+(cd "$production_target" && PROD_HOST=us.hermes PROD_DOMAIN=proletariat.icu PROD_REPO_NAME=dogpdteamreport PROD_ROUTE=/dogpdteamreport scripts/production-profile-guard.sh >/dev/null)
+(cd "$production_target" && PROD_HOST=us.hermes PROD_DOMAIN=proletariat.icu PROD_REPO_NAME=dogpdteamreport PROD_ROUTE=/dogpdteamreport/api scripts/production-profile-guard.sh >/dev/null)
+if (cd "$production_target" && PROD_HOST=43.130.49.185 PROD_DOMAIN=proletariat.icu PROD_REPO_NAME=dogpdteamreport PROD_ROUTE=/dogpdteamreport scripts/production-profile-guard.sh >/dev/null 2>&1); then
+  fail "production guard accepted raw protected IP"
+fi
+if (cd "$production_target" && PROD_HOST=example.internal PROD_DOMAIN=example.internal PROD_ROUTE=/api scripts/production-profile-guard.sh >/dev/null 2>&1); then
+  fail "production guard accepted protected route /api"
+fi
+if (cd "$production_target" && PROD_HOST=us.hermes PROD_DOMAIN=proletariat.icu PROD_REPO_NAME=dogpdteamreport PROD_ROUTE=/otherapp scripts/production-profile-guard.sh >/dev/null 2>&1); then
+  fail "production guard accepted proletariat.icu route outside repo prefix"
+fi
 
 echo "Bootstrap project tests passed."

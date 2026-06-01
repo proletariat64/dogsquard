@@ -33,6 +33,7 @@ The user, as a solo developer using agent-heavy vibe coding.
 - Preserve existing project files.
 - Avoid copying irrelevant example app assets.
 - Include dev deploy support by default for applicable app profiles.
+- Provide an opt-in scaffold-only production profile for adopted apps.
 - Generate correct Makefile and PR Quality Gate behavior for each profile.
 - Keep governance docs consistent across repos.
 - Reduce cognitive load when starting or adopting new repositories.
@@ -40,6 +41,7 @@ The user, as a solo developer using agent-heavy vibe coding.
 ## Non-goals
 
 - No production deployment.
+- No production deploy workflow generation by default.
 - No trial repository modification.
 - No public template release.
 - No server, runtime, or deployment behavior changes.
@@ -69,6 +71,7 @@ Expected bootstrap behavior:
 - Copy dev deploy support by default.
 - Generate cn.ant high-port dev defaults with frontend `8173` and backend `8180`.
 - Allow dev deploy support to be disabled with `INCLUDE_DEV_DEPLOY=false`.
+- Allow scaffold-only production profile docs, placeholders, and guard checks with `INCLUDE_PRODUCTION_PROFILE=true`.
 
 ### PROJECT_TYPE=go-js
 
@@ -152,8 +155,31 @@ Potential behavior:
 
 - Do not copy Dogsquard example app unless requested.
 - Do not copy deploy workflow for docs-only repos unless deployment is explicitly enabled.
+- Do not generate production profile scaffold unless `INCLUDE_PRODUCTION_PROFILE=true`.
+- Do not generate production deploy workflow in any profile.
 - Do not copy server topology docs into unrelated repos by default.
 - Do not copy tool/session-local files.
+
+## Production Profile Scaffold
+
+Production support is planning-only until a later explicit approval.
+
+When `INCLUDE_PRODUCTION_PROFILE=true`, bootstrap may generate:
+
+- `.env.dogsquard-production.example`
+- `scripts/production-profile-guard.sh`
+- `docs/07_runbooks/runbook-production-profile.md`
+- `docs/06_testing/test-production-profile.md`
+
+This scaffold documents names, checklist items, and protected-target guard behavior. It must not add `.github/workflows/deploy-production.yml`, deploy to a server, edit reverse proxy configuration, or expose a route.
+
+Current production planning route decision:
+
+- target host: `us.hermes`
+- frontend route shape: `https://proletariat.icu/{reponame}/`
+- backend route shape: `https://proletariat.icu/{reponame}/api`
+
+This is a route-strategy decision for planning and scaffold validation. It is not approval to implement production deployment or edit `us.hermes`.
 
 ## Runtime Directory Placeholders
 
@@ -173,6 +199,8 @@ Profiles may need safe placeholders for ignored runtime directories. For Node re
 - Dev deploy assets are default for `PROJECT_TYPE=node` and `PROJECT_TYPE=go-js`.
 - Dev deploy assets are not default for `PROJECT_TYPE=docs-only`.
 - cn.ant high-port defaults are generated for applicable dev deploy profiles.
+- Production profile scaffold is opt-in and never generates a production deploy workflow.
+- Production profile guard accepts only the approved `us.hermes` plus repo-scoped `proletariat.icu/{reponame}` route shape and rejects root, top-level `/api`, raw protected IP, and wrong-prefix routes.
 - Local/private agent files are ignored by default.
 - Optional npm script detection is quiet when scripts are absent.
 - Bootstrap behavior is covered by `make bootstrap-test`.

@@ -82,6 +82,14 @@ Docs-only repositories do not receive dev deploy material by default, but it can
 PROJECT_TYPE=docs-only TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_DEV_DEPLOY=true scripts/bootstrap-project.sh
 ```
 
+Production profile scaffold is opt-in and planning-only:
+
+```bash
+PROJECT_TYPE=node TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_PRODUCTION_PROFILE=true scripts/bootstrap-project.sh
+```
+
+This generates production placeholders, runbook, test plan, and guard script. It does not generate a production deploy workflow, deploy anything, change servers, or expose a route.
+
 The Makefile wrapper is:
 
 ```bash
@@ -153,6 +161,48 @@ Docs-only repositories should not receive deploy workflow by default.
 
 For `node` and `go-js`, dev deploy support is now default Dogsquard bootstrap content because the current Control Board treats cn.ant dev deployment and high-port access as baseline template capabilities. The generated material is still dev-only and does not add production deployment.
 
+## Production Profile Scaffold
+
+Use production scaffold only after production implementation planning is approved:
+
+```bash
+PROJECT_TYPE=node TARGET_DIR=../target-repo DRY_RUN=false INCLUDE_PRODUCTION_PROFILE=true scripts/bootstrap-project.sh
+```
+
+Generated assets:
+
+- `.env.dogsquard-production.example`
+- `scripts/production-profile-guard.sh`
+- `docs/07_runbooks/runbook-production-profile.md`
+- `docs/06_testing/test-production-profile.md`
+
+The scaffold is intentionally not a deploy implementation. It must not create:
+
+- `.github/workflows/deploy-production.yml`
+- reverse proxy config
+- server config
+- public route activation
+- secrets files
+
+The generated guard can validate candidate values without deploying:
+
+```bash
+PROD_HOST=us.hermes \
+PROD_DOMAIN=proletariat.icu \
+PROD_REPO_NAME=dogpdteamreport \
+PROD_ROUTE=/dogpdteamreport \
+scripts/production-profile-guard.sh
+```
+
+Current approved planning route shape:
+
+- frontend: `https://proletariat.icu/{reponame}/`
+- backend: `https://proletariat.icu/{reponame}/api`
+
+The guard must reject raw protected IP use, root `/`, top-level `/api`, and `proletariat.icu` routes outside the approved repo prefix.
+
+This route strategy does not approve production implementation, reverse proxy edits, server changes, or public route activation.
+
 ## Dev High-port Defaults
 
 Applicable profiles generate:
@@ -218,6 +268,9 @@ Current validation also confirms:
 - `PROJECT_TYPE=docs-only` excludes dev deploy by default.
 - existing `.gitignore` files are preserved and appended with local/private agent file ignores.
 - generated Node Makefile optional script detection avoids noisy npm lifecycle errors.
+- production profile scaffold remains opt-in.
+- production profile scaffold does not generate production deploy workflow.
+- generated production guard accepts only the approved `us.hermes` plus repo-scoped `proletariat.icu/{reponame}` route shape and rejects unsafe route collisions.
 
 ## Trial Repo Lessons
 

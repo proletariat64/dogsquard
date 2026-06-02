@@ -6,6 +6,23 @@
 
 - Closes #
 
+## Scope Control
+
+- Freeze state respected: yes / no / not applicable
+- Frozen scope item:
+- Change Request used: none / CR-###
+- PR budget: PR <n> of <max>
+- Artifact tier: 0 / 1 / 2 / 3 / 4
+- New governance artifacts added:
+- Why this is not scope expansion:
+
+## Non-goals Confirmed
+
+- [ ] No unrelated product work
+- [ ] No unapproved production/deploy behavior
+- [ ] No new PRD/BDD/ADR/runbook/test plan outside artifact budget
+- [ ] Non-blocking findings moved to Later or Change Requests
+
 ## Change Type
 
 - [ ] feat

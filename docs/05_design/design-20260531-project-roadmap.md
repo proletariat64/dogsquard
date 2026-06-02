@@ -5,8 +5,8 @@ status: "draft"
 owner: "user"
 source: "agent"
 created: "2026-05-31"
-updated: "2026-06-01"
-related_issue: "#1"
+updated: "2026-06-02"
+related_issue: "#1, #42"
 related_pr: ""
 supersedes: ""
 ---
@@ -42,6 +42,168 @@ Dogsquard exists to make future internal app repositories easier to initialize, 
 - strict PR checks
 - automated dev deploy
 - documentation governance
+
+## Bounded Control Board Model
+
+Issue #1 remains the project cockpit, but it must not become an infinite task factory.
+
+The Control Board should now show:
+
+- Freeze State
+- Frozen Scope
+- Change Requests
+- Later / Parking Lot
+- Current Milestone and Objective
+- Capability Map
+- Now / Next / Later
+- Current Decisions
+- Open Questions
+- Guardrails
+- Latest Completed
+- Next Deliverable
+
+The Freeze Model controls expansion:
+
+- Design Draft allows exploration and candidate tasks.
+- Design Frozen stops major design expansion unless the user re-approves scope.
+- Implementation Plan Draft defines exact files or areas, acceptance criteria, non-goals, validation, PR budget, and artifact budget.
+- Implementation Plan Frozen allows only Frozen Scope, blockers, safety fixes, acceptance-criteria requirements, or user-approved Change Requests.
+- Released means the deliverable met its release stop rule and new ideas go to Change Requests or Later.
+- Reopened is only for acceptance-criteria gaps, CI/test failures, safety/security issues, or explicit user direction changes.
+
+After freeze, discovery creates Change Requests or Later items instead of automatic Now tasks.
+
+## Scope Control Rules
+
+### Frozen Scope
+
+Each active deliverable should define:
+
+- outcome
+- must-change files or areas
+- may-change files or areas
+- must-not-change non-goals
+- acceptance criteria
+- PR budget
+- artifact budget
+
+Every Now item after Implementation Plan Freeze must map to Frozen Scope or to an approved Change Request.
+
+### Change-Control Entry Criteria
+
+New work may enter Now after freeze only if:
+
+- it blocks Frozen Scope
+- it fixes a safety or security issue
+- it is required by acceptance criteria
+- the user explicitly approves scope expansion
+
+Otherwise it belongs in Change Requests, Later, Case Study, or Archive.
+
+### Artifact Budget
+
+Artifact cost should match change complexity.
+
+| Tier | Change type | Expected artifacts |
+|---|---|---|
+| 0 | typo, wording, link, README clarification | PR body only |
+| 1 | small script, Makefile, or doc-check fix | PR body and direct test if needed |
+| 2 | workflow behavior change | affected runbook or test update, not full bundle |
+| 3 | new reusable capability | short design or PRD, test, and runbook if humans operate it |
+| 4 | production, security, or server mutation | PRD/design, ADR, runbook, test plan, explicit approval, and safety gate |
+
+Do not create a PRD + BDD + ADR + runbook + test-plan bundle unless the work is Tier 3 or Tier 4, the user approved the capability, the Control Board artifact budget allows it, and the PR explains why each artifact is needed.
+
+### PR Budget
+
+One capability should normally take one or two PRs.
+
+More than two PRs for the same capability requires a Control Board budget exception that explains:
+
+- why another PR is needed
+- what risk is avoided by splitting
+- which files or areas are affected
+- why the split is not task sprawl
+- the user approval record
+
+Small work should usually skip a separate design PR.
+
+## Template Scope Classification
+
+Dogsquard should separate reusable core from real-project evidence.
+
+| Class | Meaning | Rule |
+|---|---|---|
+| Core | minimal default-on template behavior | requires explicit reason and should remain small |
+| Optional Pattern | reusable but opt-in capability | must not become default-on without user approval and evidence |
+| Case Study | evidence from one real project | becomes Core only after repeated evidence or explicit approval |
+| Archive | historical or superseded detail | preserves context but must not drive current scope |
+
+Current Core:
+
+- README canonical entrypoint
+- `scripts/bootstrap-project.sh`
+- `scripts/test-bootstrap-project.sh`
+- Makefile profile commands
+- basic docs governance
+- issue templates
+- PR template
+- PR Quality Gate
+- basic local/private file ignore policy
+- minimal agent charter and Control Board guidance
+
+Current Optional Patterns:
+
+- dev deploy pattern
+- production profile scaffold
+- runtime scripts
+- rollback pattern
+- high-port dev access
+- production health investigation runbook
+
+Current Case Studies:
+
+- `dogpdteamreport` bootstrap trial
+- `dogpdteamreport` production launch lessons
+- production 502 investigation
+
+## Stable Safety Invariants
+
+Stable safety rules:
+
+- do not commit secrets
+- do not commit raw server config or raw logs
+- do not claim protected routes `/` or `/api`
+- do not touch reverse proxy or server config without explicit approval
+- do not deploy, restart, or rollback production runtime without explicit approval
+
+Operational lessons from production should first be classified as Optional Pattern or Case Study. They become Core only when the user approves that promotion or repeated evidence proves they are broadly reusable.
+
+## Current Release Stop Rule
+
+Current release target: `v0.1.x` bounded operating model correction.
+
+Release when:
+
+- Issue #1 operating model has Freeze State, Frozen Scope, Change Requests, and Later guidance
+- Control Board runbook defines design freeze and implementation plan freeze
+- artifact budget and PR budget are documented
+- Core / Optional Pattern / Case Study / Archive distinction is documented
+- PR template asks reviewers to confirm scope control
+- no unapproved production automation is added
+
+Do not include in this release:
+
+- next production app selection
+- route automation
+- new deploy workflow
+- reverse proxy or server mutation behavior
+- new PRD, BDD, ADR, or standalone test plan for this process correction
+
+After release:
+
+- new ideas go to Later or Change Requests
+- no new scope enters Now without explicit approval or change-control criteria
 
 ## Completed Capability Groups
 

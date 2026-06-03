@@ -19,7 +19,8 @@ if [[ ! -f "$BODY_FILE" ]]; then
   exit 2
 fi
 
-api="https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments"
+list_api="https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments"
+comment_api="https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/comments"
 comments_json="$(mktemp)"
 body_json="$(mktemp)"
 trap 'rm -f "$comments_json" "$body_json"' EXIT
@@ -28,7 +29,7 @@ curl -fsSL \
   -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  "$api?per_page=100" > "$comments_json"
+  "$list_api?per_page=100" > "$comments_json"
 
 comment_id="$(python3 - "$comments_json" "$MARKER" <<'PY'
 import json
@@ -62,7 +63,7 @@ if [[ -n "$comment_id" ]]; then
     -H "Authorization: Bearer ${GITHUB_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
-    "$api/$comment_id" \
+    "$comment_api/$comment_id" \
     --data-binary "@$body_json" >/dev/null
   echo "Updated PR comment $comment_id."
 else
@@ -71,7 +72,7 @@ else
     -H "Authorization: Bearer ${GITHUB_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
-    "$api" \
+    "$list_api" \
     --data-binary "@$body_json" >/dev/null
   echo "Created PR comment."
 fi

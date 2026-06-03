@@ -29,7 +29,7 @@ jobs:
 
     env:
       PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ANTHROPIC_AUTH_TOKEN: ${{ secrets.DEEPSEEK_AUTH_TOKEN }}
       ANTHROPIC_BASE_URL: https://api.deepseek.com/anthropic
       ANTHROPIC_MODEL: deepseek-v4-pro
@@ -123,8 +123,8 @@ jobs:
             --settings .github/claude/deepseek-settings.json \
             > .tmp/ai-review/review.md
 
-      - name: Upsert PR review comment
+      - name: Post PR review comment
         shell: bash
         run: |
           set -euo pipefail
-          bash scripts/upsert-pr-comment.sh "<!-- dogsquard-ai-code-review -->" .tmp/ai-review/review.md
+          gh pr comment "$PR_NUMBER" --body-file .tmp/ai-review/review.md

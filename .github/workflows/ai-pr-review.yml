@@ -1,0 +1,130 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: PR number to review
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+concurrency:
+  group: ai-pr-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  ai-pr-review:
+    name: AI PR Review
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false }}
+
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ANTHROPIC_AUTH_TOKEN: ${{ secrets.DEEPSEEK_AUTH_TOKEN }}
+      ANTHROPIC_BASE_URL: https://api.deepseek.com/anthropic
+      ANTHROPIC_MODEL: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_OPUS_MODEL: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_OPUS_MODEL_NAME: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_SONNET_MODEL: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_SONNET_MODEL_NAME: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: deepseek-v4-flash
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME: deepseek-v4-flash
+      ENABLE_TOOL_SEARCH: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build PR review context
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p .tmp/ai-review
+
+          gh pr view "$PR_NUMBER" \
+            --json number,title,body,baseRefName,headRefName,author,additions,deletions,changedFiles,url \
+            > .tmp/ai-review/pr.json
+
+          gh pr diff "$PR_NUMBER" \
+            --patch \
+            > .tmp/ai-review/pr.patch
+
+          {
+            echo "# Dogsquard AI Code Review Prompt"
+            echo
+            echo "You are reviewing a pull request for the Dogsquard repository."
+            echo
+            echo "Repository purpose:"
+            echo "- Dogsquard is a reusable bootstrap kit for future small and medium internal application repositories."
+            echo "- It is not the business product itself."
+            echo "- It provides project governance, local commands, GitHub workflow, PR quality checks, optional dev deploy patterns, and agent operating rules."
+            echo
+            echo "Review rules:"
+            echo "- Be practical, direct, and concise."
+            echo "- Do not approve, reject, or block the PR. CI remains the merge gate."
+            echo "- Do not invent files or behavior that are not present in the diff."
+            echo "- Focus on correctness, shell safety, GitHub Actions safety, secrets safety, CI risk, and Dogsquard template boundary violations."
+            echo "- If there is no concrete issue, say so."
+            echo "- Output Markdown only."
+            echo
+            echo "Required output format:"
+            echo "## 🤖 Dogsquard AI Code Review"
+            echo
+            echo "<!-- dogsquard-ai-code-review -->"
+            echo
+            echo "### Verdict"
+            echo "PASS / NEEDS_ATTENTION / HIGH_RISK"
+            echo
+            echo "### What changed"
+            echo "- ..."
+            echo
+            echo "### Must fix"
+            echo "- ..."
+            echo
+            echo "### Should consider"
+            echo "- ..."
+            echo
+            echo "### Test gaps"
+            echo "- ..."
+            echo
+            echo "### Dogsquard boundary check"
+            echo "- ..."
+            echo
+            echo "---"
+            echo "PR metadata:"
+            cat .tmp/ai-review/pr.json
+            echo
+            echo "---"
+            echo "PR patch:"
+            cat .tmp/ai-review/pr.patch
+          } > .tmp/ai-review/prompt.md
+
+      - name: Run Claude Code with DeepSeek
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npx -y @anthropic-ai/claude-code \
+            -p "$(cat .tmp/ai-review/prompt.md)" \
+            --model opus \
+            --settings .github/claude/deepseek-settings.json \
+            > .tmp/ai-review/review.md
+
+      - name: Upsert PR review comment
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/upsert-pr-comment.sh "<!-- dogsquard-ai-code-review -->" .tmp/ai-review/review.md

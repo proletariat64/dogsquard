@@ -14,7 +14,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
   issues: write
 
 concurrency:
@@ -127,17 +127,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          body_json="$(mktemp)"
-          python3 - .tmp/ai-review/review.md > "$body_json" <<'PY'
-          import json
-          import sys
-          with open(sys.argv[1], encoding='utf-8') as f:
-              print(json.dumps({'body': f.read()}))
-          PY
-          curl -fsS \
-            -X POST \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-            --data-binary "@$body_json"
+          bash scripts/upsert-pr-comment.sh \
+            "<!-- dogsquard-ai-code-review -->" \
+            .tmp/ai-review/review.md

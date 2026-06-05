@@ -142,7 +142,7 @@ printf '# Existing Project README\n' > "$go_js_target/README.md"
 cat > "$go_js_target/backend/go.mod" <<'GOMOD'
 module example.com/go-js-target
 
-go 1.22
+go 1.24
 GOMOD
 cat > "$go_js_target/frontend/package.json" <<'JSON'
 {

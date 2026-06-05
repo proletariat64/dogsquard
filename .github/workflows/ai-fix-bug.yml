@@ -1,0 +1,120 @@
+name: AI Fix Bug
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to process."
+        required: true
+        type: string
+      comment_body:
+        description: "Trigger comment body to simulate."
+        required: true
+        default: "/ai-fix-bug approved"
+        type: string
+      comment_author_association:
+        description: "Trigger author association."
+        required: false
+        default: "OWNER"
+        type: choice
+        options:
+          - OWNER
+          - MEMBER
+          - COLLABORATOR
+          - CONTRIBUTOR
+          - NONE
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ai-fix-bug-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  ai-fix-bug:
+    name: AI Fix Bug
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.issue.pull_request == null }}
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ANTHROPIC_AUTH_TOKEN: ${{ secrets.DEEPSEEK_AUTH_TOKEN }}
+      ANTHROPIC_BASE_URL: https://api.deepseek.com/anthropic
+      ANTHROPIC_MODEL: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_OPUS_MODEL: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_OPUS_MODEL_NAME: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_SONNET_MODEL: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_SONNET_MODEL_NAME: deepseek-v4-pro
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: deepseek-v4-flash
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME: deepseek-v4-flash
+      ENABLE_TOOL_SEARCH: "true"
+      ISSUE_NUMBER_INPUT: ${{ inputs.issue_number }}
+      COMMENT_BODY_INPUT: ${{ inputs.comment_body }}
+      COMMENT_AUTHOR_ASSOCIATION_INPUT: ${{ inputs.comment_author_association }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Prepare AI bug-fix request
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/ai-fix-bug.sh prepare
+
+      - name: Run Claude Code for bug fix
+        if: ${{ steps.prepare.outputs.allowed == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx -y @anthropic-ai/claude-code \
+            -p "$(cat .tmp/ai-fix/prompt.md)" \
+            --model opus \
+            --settings .github/claude/deepseek-settings.json \
+            --dangerously-skip-permissions \
+            > .tmp/ai-fix/claude-output.md
+
+      - name: Validate AI changes
+        id: validate
+        if: ${{ steps.prepare.outputs.allowed == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/ai-fix-bug.sh validate-diff
+
+      - name: Finalize draft PR
+        if: ${{ steps.prepare.outputs.allowed == 'true' && steps.validate.outputs.result == 'ready' }}
+        shell: bash
+        env:
+          BRANCH_NAME_OVERRIDE: ${{ steps.prepare.outputs.branch_name }}
+        run: |
+          set -euo pipefail
+          scripts/ai-fix-bug.sh finalize
+
+      - name: Upload AI fix artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-fix-bug-artifacts
+          path: .tmp/ai-fix/
+          if-no-files-found: ignore

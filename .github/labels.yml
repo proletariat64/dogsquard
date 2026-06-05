@@ -32,6 +32,18 @@ labels:
   - name: hotfix
     color: "b60205"
     description: "Urgent fix with elevated release attention."
+  - name: ai-fix-candidate
+    color: "1d76db"
+    description: "Suitable for approval-gated AI bug-fix assistance."
+  - name: ai-fix-running
+    color: "fbca04"
+    description: "AI bug-fix workflow is actively processing this issue."
+  - name: ai-fix-needs-human
+    color: "b60205"
+    description: "AI bug-fix workflow stopped and needs human follow-up."
+  - name: ai-fix-pr-opened
+    color: "0e8a16"
+    description: "An AI-generated draft PR is open for this issue."
   - name: skip-docs
     color: "fef2c0"
     description: "Explicit documentation gate bypass with justification."

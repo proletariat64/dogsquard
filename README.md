@@ -23,6 +23,7 @@ The intended working model is:
 - Makefile command center
 - GitHub issue and PR templates
 - PR Quality Gate workflow
+- approval-gated AI bug-fix draft PR workflow
 - example Go backend and TypeScript frontend
 - API smoke and Playwright smoke tests
 - dev deployment pattern for `cn.ant`
@@ -95,6 +96,8 @@ Dogsquard provides:
 - `.github/pull_request_template.md`
 - `.github/labels.yml`
 - `.github/workflows/pr-quality.yml`
+- `.github/workflows/ai-pr-review.yml`
+- `.github/workflows/ai-fix-bug.yml`
 
 Labels are documented as source configuration and may need manual setup until label automation is added.
 
@@ -127,6 +130,7 @@ Public access is not exposed by default. SSH tunnel access is the validated huma
 - Project roadmap: `docs/05_design/design-20260531-project-roadmap.md`
 - New repo bootstrap runbook: `docs/07_runbooks/runbook-new-repo-bootstrap.md`
 - PR Quality Gate runbook: `docs/07_runbooks/runbook-pr-quality-gate.md`
+- AI bug-fix workflow runbook: `docs/07_runbooks/runbook-ai-bug-fix-workflow.md`
 - Dev deployment runbook: `docs/07_runbooks/runbook-dev-deployment.md`
 - Template Finalization PRD: `docs/02_prd/prd-20260531-template-finalization.md`
 - Template boundary ADR: `docs/04_adr/0007-define-dogsquard-template-kit-boundary.md`

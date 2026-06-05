@@ -5,7 +5,7 @@ status: "draft"
 owner: "devops-agent"
 source: "agent"
 created: "2026-05-30"
-updated: "2026-05-30"
+updated: "2026-06-05"
 related_issue: "#1"
 related_pr: ""
 supersedes: ""
@@ -49,6 +49,10 @@ Flow control labels:
 
 - `epic`
 - `hotfix`
+- `ai-fix-candidate`
+- `ai-fix-running`
+- `ai-fix-needs-human`
+- `ai-fix-pr-opened`
 - `skip-docs`
 - `uat`
 - `blocked`
@@ -84,6 +88,8 @@ Priority labels:
 ## Operating Rules
 
 - Use `feat`, `bug`, or `task` as the primary issue type label.
+- Use `ai-fix-candidate` only for bug issues that are safe to hand to the bounded AI draft-PR workflow.
+- Use `ai-fix-running`, `ai-fix-needs-human`, and `ai-fix-pr-opened` as workflow state markers, not as approval on their own.
 - Use `docs`, `test`, `ci`, `release`, or `process` when the work is mainly in that area.
 - Use `skip-docs` only with explicit justification.
 - Use agent labels when a named agent materially assisted with the work.

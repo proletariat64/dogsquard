@@ -66,7 +66,11 @@ case "${1:-}" in
     cat "${MOCK_DIR}/repo.json"
     ;;
   pr)
-    printf '[]\n'
+    if [[ "${2:-}" == "create" ]]; then
+      printf 'https://example.test/pr/999\n'
+    else
+      printf '[]\n'
+    fi
     ;;
   issue)
     case "${2:-}" in
@@ -141,6 +145,41 @@ run_prepare_case() {
   )
 }
 
+run_finalize_case() {
+  local case_dir="$1"
+
+  mkdir -p "$case_dir/mockbin" "$case_dir/work/.tmp/ai-fix"
+  printf '{"state":"open","title":"Visible bug fix request","html_url":"https://example.test/issues/123","labels":[{"name":"bug"},{"name":"ai-fix-candidate"}]}\n' > "$case_dir/issue.json"
+  printf '[]\n' > "$case_dir/comments.json"
+  printf '{"defaultBranchRef":{"name":"main"}}\n' > "$case_dir/repo.json"
+  : > "$case_dir/gh.log"
+  : > "$case_dir/git.log"
+  : > "$case_dir/issue-actions.log"
+  make_mock_bin "$case_dir/mockbin"
+
+  cat > "$case_dir/work/.tmp/ai-fix/issue-comment.md" <<'EOF'
+## AI Bug Fix Result
+EOF
+  cat > "$case_dir/work/.tmp/ai-fix/pr-body.md" <<'EOF'
+## Bug Fixed
+
+Closes #123
+EOF
+
+  (
+    cd "$case_dir/work"
+    PATH="$case_dir/mockbin:$PATH" \
+    MOCK_DIR="$case_dir" \
+    GITHUB_REPOSITORY="proletariat64/dogsquard" \
+    GITHUB_EVENT_NAME="workflow_dispatch" \
+    ISSUE_NUMBER_INPUT="123" \
+    COMMENT_BODY_INPUT="/ai-fix-bug approved" \
+    COMMENT_AUTHOR_ASSOCIATION_INPUT="OWNER" \
+    BRANCH_NAME_OVERRIDE="ai-fix/issue-123-visible-bug-fix-request" \
+    bash "$ROOT_DIR/scripts/ai-fix-bug.sh" finalize > "$case_dir/finalize.out"
+  )
+}
+
 echo "AI fix bug workflow tests using $TMP_ROOT"
 
 missing_bug_case="$TMP_ROOT/missing-bug"
@@ -175,5 +214,15 @@ assert_contains "$allowed_case/git.log" 'git checkout -B ai-fix/issue-123-visibl
 assert_contains "$allowed_case/issue-actions.log" 'issue edit 123 --add-label ai-fix-running'
 assert_contains "$allowed_case/work/.tmp/ai-fix/prompt.md" 'npx gitnexus impact --repo dogsquard <symbolName> --direction upstream'
 assert_contains "$allowed_case/work/.tmp/ai-fix/prompt.md" '### GitNexus Impact'
+
+finalize_case="$TMP_ROOT/finalize"
+run_finalize_case "$finalize_case"
+assert_contains "$finalize_case/git.log" 'git commit -m fix: address issue #123 with approved AI bug fix'
+assert_contains "$finalize_case/git.log" 'git push --force-with-lease --set-upstream origin ai-fix/issue-123-visible-bug-fix-request'
+assert_contains "$finalize_case/gh.log" 'gh pr create --draft --base main --head ai-fix/issue-123-visible-bug-fix-request --title fix: issue #123 - Visible bug fix request --body-file .tmp/ai-fix/pr-body.md'
+assert_contains "$finalize_case/issue-actions.log" 'issue edit 123 --remove-label ai-fix-running'
+assert_contains "$finalize_case/issue-actions.log" 'issue edit 123 --add-label ai-fix-pr-opened'
+assert_contains "$finalize_case/issue-actions.log" 'issue comment'
+assert_contains "$finalize_case/finalize.out" 'Draft PR opened: https://example.test/pr/999'
 
 echo "AI fix bug workflow tests passed."

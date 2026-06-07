@@ -87,11 +87,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          prompt_bytes="$(wc -c < .tmp/ai-fix/prompt.md)"
+          echo "AI bug-fix prompt size: ${prompt_bytes} bytes"
+
           npx -y @anthropic-ai/claude-code \
-            -p "$(cat .tmp/ai-fix/prompt.md)" \
+            -p \
             --model opus \
             --settings .github/claude/deepseek-settings.json \
             --dangerously-skip-permissions \
+            < .tmp/ai-fix/prompt.md \
             > .tmp/ai-fix/claude-output.md
 
       - name: Validate AI changes

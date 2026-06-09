@@ -127,6 +127,7 @@ Public access is not exposed by default. SSH tunnel access is the validated huma
 - Project roadmap: `docs/05_design/design-20260531-project-roadmap.md`
 - New repo bootstrap runbook: `docs/07_runbooks/runbook-new-repo-bootstrap.md`
 - PR Quality Gate runbook: `docs/07_runbooks/runbook-pr-quality-gate.md`
+- Practice project testing governance runbook: `docs/07_runbooks/runbook-practice-project-testing-governance.md`
 - Dev deployment runbook: `docs/07_runbooks/runbook-dev-deployment.md`
 - Template Finalization PRD: `docs/02_prd/prd-20260531-template-finalization.md`
 - Template boundary ADR: `docs/04_adr/0007-define-dogsquard-template-kit-boundary.md`

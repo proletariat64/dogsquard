@@ -45,6 +45,11 @@
 
 -
 
+## Testing Impact Check
+
+- Testing docs/runbook updated, or no testing update needed with reason:
+- Required when changing schema, DDD/API docs, backend routes, seed files, frontend API consumers, or testing/runbook docs.
+
 ## Validation Commands
 
 -

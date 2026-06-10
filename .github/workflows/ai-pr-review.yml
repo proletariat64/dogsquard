@@ -117,10 +117,14 @@ jobs:
         run: |
           set -euo pipefail
 
+          prompt_bytes="$(wc -c < .tmp/ai-review/prompt.md)"
+          echo "AI review prompt size: ${prompt_bytes} bytes"
+
           npx -y @anthropic-ai/claude-code \
-            -p "$(cat .tmp/ai-review/prompt.md)" \
+            -p \
             --model opus \
             --settings .github/claude/deepseek-settings.json \
+            < .tmp/ai-review/prompt.md \
             > .tmp/ai-review/review.md
 
       - name: Post PR review comment

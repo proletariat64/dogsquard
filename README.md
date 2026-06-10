@@ -23,6 +23,7 @@ The intended working model is:
 - Makefile command center
 - GitHub issue and PR templates
 - PR Quality Gate workflow
+- approval-gated AI bug-fix draft PR workflow
 - example Go backend and TypeScript frontend
 - API smoke and Playwright smoke tests
 - dev deployment pattern for `cn.ant`
@@ -95,6 +96,8 @@ Dogsquard provides:
 - `.github/pull_request_template.md`
 - `.github/labels.yml`
 - `.github/workflows/pr-quality.yml`
+- `.github/workflows/ai-pr-review.yml`
+- `.github/workflows/ai-fix-bug.yml`
 
 Labels are documented as source configuration and may need manual setup until label automation is added.
 

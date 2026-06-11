@@ -78,6 +78,7 @@
 - [ ] docs updated or skip-docs justified
 - [ ] tests added/updated where needed
 - [ ] local release-check ran if applicable
+- [ ] no fake/blank/stub/mock implementation is presented as complete
 - [ ] no secrets committed
 - [ ] no unverified model/CLI command hardcoded
 - [ ] production deployment not triggered by this PR unless explicitly intended

@@ -236,6 +236,8 @@ copy_governance_scripts() {
     scripts/agent-doc-review.sh
     scripts/doc-check-local.sh
     scripts/doc-guard.sh
+    scripts/fake-implementation-guard.sh
+    scripts/test-fake-implementation-guard.sh
     scripts/lib-doc-rules.sh
   )
 
@@ -360,13 +362,14 @@ write_docs_only_makefile() {
   write_file Makefile <<'MAKEFILE'
 SHELL := /bin/bash
 
-.PHONY: help doc-check doc-guard agent-docs lint test release-check
+.PHONY: help doc-check doc-guard fake-check fake-check-test agent-docs lint test release-check
 
 help:
 	@echo "Available commands:"
 	@echo "  make help          Show this help"
 	@echo "  make doc-check     Run local documentation checks"
 	@echo "  make doc-guard     Run Doc Watch Guard report"
+	@echo "  make fake-check    Run AI fake-completion implementation guard"
 	@echo "  make agent-docs    Print a safe agent documentation review prompt"
 	@echo "  make lint          Run docs-only lint placeholder"
 	@echo "  make test          Run docs-only test placeholder"
@@ -378,6 +381,12 @@ doc-check:
 doc-guard:
 	@./scripts/doc-guard.sh
 
+fake-check:
+	@./scripts/fake-implementation-guard.sh
+
+fake-check-test:
+	@./scripts/test-fake-implementation-guard.sh
+
 agent-docs:
 	@./scripts/agent-doc-review.sh
 
@@ -387,7 +396,7 @@ lint:
 test:
 	@echo "No app tests configured for docs-only profile."
 
-release-check: doc-check doc-guard lint test
+release-check: doc-check doc-guard fake-check lint test
 MAKEFILE
 }
 
@@ -395,7 +404,7 @@ write_node_makefile() {
   write_file Makefile <<'MAKEFILE'
 SHELL := /bin/bash
 
-.PHONY: help install build test lint doc-check doc-guard agent-docs has-npm-script release-check
+.PHONY: help install build test lint doc-check doc-guard fake-check fake-check-test agent-docs has-npm-script release-check
 
 help:
 	@echo "Available commands:"
@@ -406,6 +415,7 @@ help:
 	@echo "  make lint          Run npm lint when configured"
 	@echo "  make doc-check     Run local documentation checks"
 	@echo "  make doc-guard     Run Doc Watch Guard report"
+	@echo "  make fake-check    Run AI fake-completion implementation guard"
 	@echo "  make agent-docs    Print a safe agent documentation review prompt"
 	@echo "  make release-check Run docs, lint, test, and build checks"
 
@@ -446,10 +456,16 @@ doc-check:
 doc-guard:
 	@./scripts/doc-guard.sh
 
+fake-check:
+	@./scripts/fake-implementation-guard.sh
+
+fake-check-test:
+	@./scripts/test-fake-implementation-guard.sh
+
 agent-docs:
 	@./scripts/agent-doc-review.sh
 
-release-check: doc-check doc-guard lint test build
+release-check: doc-check doc-guard fake-check lint test build
 MAKEFILE
 }
 
@@ -457,7 +473,7 @@ write_go_js_makefile() {
   write_file Makefile <<'MAKEFILE'
 SHELL := /bin/bash
 
-.PHONY: help test lint backend-test frontend-build doc-check doc-guard agent-docs release-check
+.PHONY: help test lint backend-test frontend-build doc-check doc-guard fake-check fake-check-test agent-docs release-check
 
 help:
 	@echo "Available commands:"
@@ -468,6 +484,7 @@ help:
 	@echo "  make frontend-build Install frontend dependencies and build"
 	@echo "  make doc-check      Run local documentation checks"
 	@echo "  make doc-guard      Run Doc Watch Guard report"
+	@echo "  make fake-check     Run AI fake-completion implementation guard"
 	@echo "  make agent-docs     Print a safe agent documentation review prompt"
 	@echo "  make release-check  Run docs, lint, test, and frontend build checks"
 
@@ -513,10 +530,16 @@ doc-check:
 doc-guard:
 	@./scripts/doc-guard.sh
 
+fake-check:
+	@./scripts/fake-implementation-guard.sh
+
+fake-check-test:
+	@./scripts/test-fake-implementation-guard.sh
+
 agent-docs:
 	@./scripts/agent-doc-review.sh
 
-release-check: doc-check doc-guard lint test frontend-build
+release-check: doc-check doc-guard fake-check lint test frontend-build
 MAKEFILE
 }
 
@@ -566,6 +589,16 @@ jobs:
           make doc-guard
           make release-check
 
+  fake-implementation-guard:
+    name: Fake Implementation Guard
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan changed production code for fake-complete markers
+        run: make fake-check
+
   pr-quality-summary:
     name: PR Quality Summary
     runs-on: ubuntu-24.04
@@ -573,6 +606,7 @@ jobs:
       - shell-check
       - repository-hygiene
       - docs-quality
+      - fake-implementation-guard
     if: always()
     steps:
       - name: Summary
@@ -580,6 +614,7 @@ jobs:
           test "${{ needs.shell-check.result }}" = "success"
           test "${{ needs.repository-hygiene.result }}" = "success"
           test "${{ needs.docs-quality.result }}" = "success"
+          test "${{ needs.fake-implementation-guard.result }}" = "success"
 WORKFLOW
 }
 
@@ -642,6 +677,16 @@ jobs:
           make doc-guard
           make release-check
 
+  fake-implementation-guard:
+    name: Fake Implementation Guard
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan changed production code for fake-complete markers
+        run: make fake-check
+
   pr-quality-summary:
     name: PR Quality Summary
     runs-on: ubuntu-24.04
@@ -649,6 +694,7 @@ jobs:
       - shell-check
       - repository-hygiene
       - node-quality
+      - fake-implementation-guard
     if: always()
     steps:
       - name: Summary
@@ -656,6 +702,7 @@ jobs:
           test "${{ needs.shell-check.result }}" = "success"
           test "${{ needs.repository-hygiene.result }}" = "success"
           test "${{ needs.node-quality.result }}" = "success"
+          test "${{ needs.fake-implementation-guard.result }}" = "success"
 WORKFLOW
 }
 
@@ -717,6 +764,16 @@ jobs:
           make doc-guard
           make release-check
 
+  fake-implementation-guard:
+    name: Fake Implementation Guard
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan changed production code for fake-complete markers
+        run: make fake-check
+
   pr-quality-summary:
     name: PR Quality Summary
     runs-on: ubuntu-24.04
@@ -724,6 +781,7 @@ jobs:
       - shell-check
       - repository-hygiene
       - go-js-quality
+      - fake-implementation-guard
     if: always()
     steps:
       - name: Summary
@@ -731,6 +789,7 @@ jobs:
           test "${{ needs.shell-check.result }}" = "success"
           test "${{ needs.repository-hygiene.result }}" = "success"
           test "${{ needs.go-js-quality.result }}" = "success"
+          test "${{ needs.fake-implementation-guard.result }}" = "success"
 WORKFLOW
 }
 

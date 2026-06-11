@@ -17,7 +17,7 @@ supersedes: ""
 
 The PR Quality Gate is the deterministic GitHub Actions quality gate for Dogsquard pull requests.
 
-It checks shell syntax, repository hygiene, local documentation rules, template-safe lint/test/build commands, minimal Playwright smoke coverage, and a production safety guard.
+It checks shell syntax, repository hygiene, local documentation rules, template-safe lint/test/build commands, AI fake-completion markers, minimal Playwright smoke coverage, and a production safety guard.
 
 ## Workflow Jobs
 
@@ -45,6 +45,18 @@ make release-check
 ```
 
 This reuses the deterministic local foundation added in Phase 2.
+
+### Fake Implementation Guard
+
+Runs:
+
+```bash
+make fake-check
+```
+
+This scans changed production code for high-signal fake-completion markers such as todo, mock, stub, placeholder, hardcoded static returns, and not-implemented paths. It reports exact file and line findings and writes the same summary to the GitHub Actions step summary.
+
+Intentional unfinished production placeholders must include `DOGSQUARD_INTENTIONAL_PLACEHOLDER: <reason>` near the flagged line and must be disclosed in the PR body.
 
 ### Playwright Smoke
 
@@ -85,6 +97,7 @@ Run:
 ```bash
 make doc-check
 make doc-guard
+make fake-check
 make release-check
 git diff --check
 bash -n scripts/*.sh
@@ -114,6 +127,19 @@ bash -n scripts/*.sh
 ```
 
 Fix the reported script and line number. Shell syntax checks do not execute scripts, so runtime failures need separate reproduction.
+
+## Fixing Fake Implementation Guard Failures
+
+Read the file and line findings in the failed job.
+
+Valid fixes are:
+
+- implement the real behavior
+- move test doubles into test or fixture paths
+- rename production code that accidentally uses mock/fake/stub naming
+- disclose an intentional unfinished placeholder with `DOGSQUARD_INTENTIONAL_PLACEHOLDER: <reason>` and explain it in the PR
+
+Do not bypass the guard by hiding fake-complete behavior behind different wording.
 
 ## Fixing Production Safety Guard Failures
 

@@ -73,6 +73,24 @@ jobs:
           make doc-guard
           make release-check
 
+  fake-implementation-guard:
+    name: Fake Implementation Guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan changed production code for fake-complete markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch origin "+refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}" --depth=1
+          fi
+          make fake-check
+
   playwright-smoke:
     name: Playwright Smoke
     runs-on: ubuntu-24.04
@@ -183,6 +201,7 @@ jobs:
       - shell-check
       - repository-hygiene
       - local-foundation
+      - fake-implementation-guard
       - playwright-smoke
       - production-safety-guard
     if: always()
@@ -193,6 +212,7 @@ jobs:
           SHELL_CHECK: ${{ needs.shell-check.result }}
           REPOSITORY_HYGIENE: ${{ needs.repository-hygiene.result }}
           LOCAL_FOUNDATION: ${{ needs.local-foundation.result }}
+          FAKE_IMPLEMENTATION_GUARD: ${{ needs.fake-implementation-guard.result }}
           PLAYWRIGHT_SMOKE: ${{ needs.playwright-smoke.result }}
           PRODUCTION_SAFETY_GUARD: ${{ needs.production-safety-guard.result }}
         run: |
@@ -202,6 +222,7 @@ jobs:
             "shell-check:$SHELL_CHECK" \
             "repository-hygiene:$REPOSITORY_HYGIENE" \
             "local-foundation:$LOCAL_FOUNDATION" \
+            "fake-implementation-guard:$FAKE_IMPLEMENTATION_GUARD" \
             "playwright-smoke:$PLAYWRIGHT_SMOKE" \
             "production-safety-guard:$PRODUCTION_SAFETY_GUARD"; do
             name="${item%%:*}"

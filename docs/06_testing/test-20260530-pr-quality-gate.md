@@ -26,6 +26,7 @@ The current workflow includes:
 - shell syntax validation for `scripts/*.sh`
 - repository hygiene through `git diff --check`
 - local foundation commands through `make help`, `make doc-check`, `make doc-guard`, and `make release-check`
+- fake implementation guard through `make fake-check`
 - minimal Playwright smoke through `make e2e-smoke`
 - production safety guard for high-risk production/server paths
 - final `PR Quality Summary` job that fails when a required job fails or is cancelled
@@ -62,6 +63,7 @@ Run these commands before opening or updating a PR:
 ```bash
 make doc-check
 make doc-guard
+make fake-check
 make release-check
 git diff --check
 bash -n scripts/*.sh
@@ -72,6 +74,7 @@ Expected local result:
 
 - documentation checks pass
 - shell scripts parse
+- changed production code has no undisclosed fake-completion markers
 - whitespace check passes
 - backend tests pass
 - frontend build passes
@@ -86,6 +89,7 @@ GitHub Actions should run `PR Quality Gate` and report:
 - `Shell Check`
 - `Repository Hygiene`
 - `Local Foundation`
+- `Fake Implementation Guard`
 - `Playwright Smoke`
 - `Production Safety Guard`
 - `PR Quality Summary`
@@ -95,6 +99,7 @@ The `PR Quality Summary` job should be the required status check after branch pr
 ## Known Limitations
 
 - The production safety guard allows in-scope deployment scaffold, runtime script, and Playwright smoke work, but blocks unapproved production workflow, Docker runtime, and raw server/reverse-proxy config paths.
+- The fake implementation guard is a high-signal line scanner, not semantic proof that every implementation is complete.
 - The workflow runs minimal Playwright smoke only, not full regression.
 - The workflow does not deploy.
 - The workflow does not validate label sync automation.
@@ -107,6 +112,7 @@ Later phases may add:
 
 - full Playwright regression
 - documentation gate refinements
+- fake implementation guard matcher tuning based on real false positives
 - branch protection requiring `PR Quality Summary`
 - deployment workflow refinements after explicit approval
 - production approval gates

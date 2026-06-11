@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added an AI fake-completion guard for changed production code and wired it into local and PR quality gates.
 - Documentation governance foundation.
 - Local foundation commands.
 - Placeholder environment example.

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev init-new-repo bootstrap-dry-run bootstrap-test backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard fake-check fake-check-test watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev init-new-repo bootstrap-dry-run bootstrap-test backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -9,6 +9,7 @@ help:
 	@echo "  make lint          Run backend/frontend lint checks when present"
 	@echo "  make doc-check     Run local documentation checks"
 	@echo "  make doc-guard     Run Doc Watch Guard report"
+	@echo "  make fake-check    Run AI fake-completion implementation guard"
 	@echo "  make watch-docs    Re-run doc checks in a loop"
 	@echo "  make agent-docs    Print a safe agent documentation review prompt"
 	@echo "  make backend-test  Run backend Go tests"
@@ -89,6 +90,12 @@ doc-check:
 
 doc-guard:
 	@./scripts/doc-guard.sh
+
+fake-check:
+	@./scripts/fake-implementation-guard.sh
+
+fake-check-test:
+	@./scripts/test-fake-implementation-guard.sh
 
 watch-docs:
 	@./scripts/watch-docs.sh
@@ -220,4 +227,4 @@ backend-dev:
 frontend-dev:
 	@cd frontend && npm run dev
 
-release-check: doc-check lint test frontend-build
+release-check: doc-check fake-check lint test frontend-build

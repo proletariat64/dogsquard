@@ -95,6 +95,8 @@ Codex must:
 - avoid inventing product requirements
 - update relevant documentation when behavior changes
 - preserve placeholders such as `{{...}}` exactly when present
+- never present fake, blank, todo, mock, stub, placeholder, hardcoded, or static pretend implementation as complete production code
+- disclose any intentional unfinished production placeholder with `DOGSQUARD_INTENTIONAL_PLACEHOLDER: <reason>` and mention it in the final response or PR body
 
 ### Forbidden Work
 

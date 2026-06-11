@@ -212,7 +212,11 @@ assert_contains "$allowed_case/output.txt" '^branch_name=ai-fix/issue-123-visibl
 assert_contains "$allowed_case/git.log" 'git fetch'
 assert_contains "$allowed_case/git.log" 'git checkout -B ai-fix/issue-123-visible-bug-fix-request origin/main'
 assert_contains "$allowed_case/issue-actions.log" 'issue edit 123 --add-label ai-fix-running'
+assert_contains "$allowed_case/work/.tmp/ai-fix/prompt.md" 'In multi-repo indexed environments, unscoped GitNexus CLI commands can fail or inspect ambiguous graph context.'
+assert_contains "$allowed_case/work/.tmp/ai-fix/prompt.md" 'npx gitnexus query --repo dogsquard "<concept or error>"'
 assert_contains "$allowed_case/work/.tmp/ai-fix/prompt.md" 'npx gitnexus impact --repo dogsquard <symbolName> --direction upstream'
+assert_contains "$allowed_case/work/.tmp/ai-fix/prompt.md" 'If gitnexus analyze or index refresh fails, disclose the failure in issue/PR evidence and treat later GitNexus output as incomplete evidence.'
+assert_contains "$allowed_case/work/.tmp/ai-fix/prompt.md" 'npx gitnexus detect-changes --repo dogsquard > .tmp/ai-fix/gitnexus-detect-changes.txt'
 assert_contains "$allowed_case/work/.tmp/ai-fix/prompt.md" '### GitNexus Impact'
 
 finalize_case="$TMP_ROOT/finalize"

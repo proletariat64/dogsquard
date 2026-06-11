@@ -5,8 +5,8 @@ status: "draft"
 owner: "user"
 source: "agent"
 created: "2026-06-05"
-updated: "2026-06-05"
-related_issue: "#1, #46"
+updated: "2026-06-11"
+related_issue: "#1, #46, #52"
 related_pr: ""
 supersedes: ""
 ---
@@ -64,6 +64,22 @@ Maintainer means GitHub author association `OWNER`, `MEMBER`, or `COLLABORATOR`.
 8. Run GitNexus detect-changes before finalization.
 9. Commit, push, and open a draft PR only.
 10. Comment back on the issue with reproduction status, fix summary, validation, scope control, residual risk, and GitNexus impact.
+
+## GitNexus Repository Scope
+
+When using GitNexus CLI commands from an environment with more than one indexed repository, always pass `--repo <repo-name>` for graph queries, impact analysis, and detect-changes.
+
+Unscoped commands can fail with a multiple-repository error or inspect ambiguous graph context. Generated downstream guidance should substitute the concrete repository name when the target repo is known.
+
+Examples:
+
+```bash
+npx gitnexus impact <symbol> --repo <repo-name> --direction upstream
+npx gitnexus query --repo <repo-name> "<concept or error>"
+npx gitnexus detect-changes --repo <repo-name>
+```
+
+If `gitnexus analyze` fails or an index refresh cannot be completed, the agent must disclose that failure in the issue comment and PR evidence. Later GitNexus output should then be treated as incomplete evidence, not as a complete graph validation.
 
 ## Guardrails
 

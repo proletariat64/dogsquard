@@ -283,6 +283,19 @@ assert_contains "$target16/.github/ai-review/settings.json" '"enabled": true'
 assert_contains "$target16/.github/ai-review/settings.json" '"engine": "qoder"'
 echo "  PASS"
 
+# Test 16b: Interactive AI configure accepts Qoder model numbers
+echo "Test 16b: interactive Qoder model number selection"
+target16b="$TMP_ROOT/target-ai-interactive-model"
+make_target_repo "$target16b"
+output="$(
+  printf '%s\n' "$target16b" 'docs-only' '6' 'yes' 'true' 'qoder' '2' 'done' 'no' 'no' 'yes' |
+    PATH="$mockbin:$PATH" "$ROOT_DIR/install" --menu 2>&1
+)"
+assert_file "$target16b/.github/ai-review/settings.json"
+assert_contains "$target16b/.github/ai-review/settings.json" '"Qwen3.7-Max"'
+assert_not_contains "$target16b/.github/ai-review/settings.json" '"2"'
+echo "  PASS"
+
 # Test 17: Qoder config rejects zero models, >2, duplicates, Auto
 echo "Test 17: Qoder model validation"
 output="$(run_install --repo "$TMP_ROOT" --project-type docs-only --modules ai-pr-review --ai-engine qoder)"

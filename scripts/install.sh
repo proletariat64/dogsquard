@@ -166,6 +166,93 @@ expand_user_path() {
   esac
 }
 
+list_qoder_models() {
+  command -v qodercli >/dev/null 2>&1 || fail "qodercli is required to list Qoder models"
+  qodercli --list-models | awk 'NF && toupper($0) != "MODEL" && tolower($0) != "auto" { print $0 }'
+}
+
+qoder_model_is_selected() {
+  local candidate="$1"
+  local model
+  for model in "${qoder_models[@]}"; do
+    [[ "$model" == "$candidate" ]] && return 0
+  done
+  return 1
+}
+
+toggle_qoder_model() {
+  local selected="$1"
+  local next=()
+  local model
+
+  if qoder_model_is_selected "$selected"; then
+    for model in "${qoder_models[@]}"; do
+      [[ "$model" == "$selected" ]] || next+=("$model")
+    done
+    qoder_models=("${next[@]}")
+    return 0
+  fi
+
+  if [[ "${#qoder_models[@]}" -ge 2 ]]; then
+    echo "No Qoder model slots left. Uncheck one model before selecting another." >&2
+    return 0
+  fi
+
+  qoder_models+=("$selected")
+}
+
+render_qoder_model_menu() {
+  local available_models=("$@")
+  local slots_left=$((2 - ${#qoder_models[@]}))
+  local index model mark
+
+  echo
+  echo "Available Qoder models ($slots_left available model slots left):"
+  for index in "${!available_models[@]}"; do
+    model="${available_models[$index]}"
+    if qoder_model_is_selected "$model"; then
+      mark="x"
+    else
+      mark=" "
+    fi
+    printf '  %2d) [%s] %s\n' "$((index + 1))" "$mark" "$model"
+  done
+  echo "Enter a number to toggle a model. Press Enter or type done to continue."
+}
+
+select_qoder_models_interactively() {
+  local available_models=()
+  local answer answer_num model
+  mapfile -t available_models < <(list_qoder_models)
+  [[ "${#available_models[@]}" -gt 0 ]] || fail "qodercli --list-models returned no selectable models"
+
+  while true; do
+    render_qoder_model_menu "${available_models[@]}"
+    read -r -p "Qoder model selection: " answer
+    case "$answer" in
+      ""|done|Done|DONE)
+        [[ "${#qoder_models[@]}" -ge 1 ]] || {
+          echo "Select at least one Qoder model before continuing." >&2
+          continue
+        }
+        break
+        ;;
+      *[!0-9]*)
+        echo "Enter a model number, press Enter, or type done." >&2
+        ;;
+      *)
+        answer_num=$((10#$answer))
+        if (( answer_num < 1 || answer_num > ${#available_models[@]} )); then
+          echo "Model number out of range." >&2
+          continue
+        fi
+        model="${available_models[$((answer_num - 1))]}"
+        toggle_qoder_model "$model"
+        ;;
+    esac
+  done
+}
+
 # --- Usage ---
 
 usage() {
@@ -1389,11 +1476,7 @@ interactive_menu() {
       esac
       if [[ "$ai_engine" == "qoder" ]]; then
         qoder_models=()
-        local model_input
-        read -r -p "Qoder models (comma-separated, 1-2): " model_input
-        IFS=',' read -ra qoder_models <<< "$model_input"
-        [[ "${#qoder_models[@]}" -ge 1 ]] || fail "at least one Qoder model required."
-        [[ "${#qoder_models[@]}" -le 2 ]] || fail "at most two Qoder models allowed."
+        select_qoder_models_interactively
       fi
     fi
   fi

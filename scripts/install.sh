@@ -149,6 +149,23 @@ prompt_choice() {
   echo "${answer:-$default}"
 }
 
+expand_user_path() {
+  local path="$1"
+  case "$path" in
+    "~")
+      [[ -n "${HOME:-}" ]] || fail "HOME is required to expand ~ in path."
+      echo "$HOME"
+      ;;
+    "~/"*)
+      [[ -n "${HOME:-}" ]] || fail "HOME is required to expand ~ in path."
+      echo "$HOME/${path#\~/}"
+      ;;
+    *)
+      echo "$path"
+      ;;
+  esac
+}
+
 # --- Usage ---
 
 usage() {
@@ -433,6 +450,7 @@ validate_inputs() {
   fi
 
   if [[ -n "$target_dir" ]]; then
+    target_dir="$(expand_user_path "$target_dir")"
     if [[ -d "$target_dir" ]]; then
       target_dir="$(cd "$target_dir" && pwd)"
     elif [[ "$mode_install" == true ]]; then
@@ -1321,6 +1339,7 @@ interactive_menu() {
   local answer
   target_dir="$(prompt_choice "Target repository path" "${target_dir:-}")"
   [[ -n "$target_dir" ]] || fail "target repository path is required."
+  target_dir="$(expand_user_path "$target_dir")"
 
   if [[ -d "$target_dir" ]]; then
     target_dir="$(cd "$target_dir" && pwd)"

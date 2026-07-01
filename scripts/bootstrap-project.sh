@@ -51,6 +51,42 @@ validate_bool() {
   esac
 }
 
+ledger_entry() {
+  [[ -n "${DOGSQUARD_LEDGER_FILE:-}" ]] || return 0
+  local operation="$1" action="$2" path="$3" source="${4:-}" existed_before="${5:-false}"
+  local sha256_before="${6:-null}" sha256_after="${7:-null}" backup_path="${8:-null}"
+  python3 -c "
+import json, sys
+entry = {
+    'tool': 'bootstrap-project.sh',
+    'module': 'bootstrap',
+    'operation': sys.argv[1],
+    'action': sys.argv[2],
+    'path': sys.argv[3],
+    'source': sys.argv[4] if sys.argv[4] else None,
+    'existed_before': sys.argv[5] == 'true',
+    'force': sys.argv[6] == 'true',
+    'dry_run': sys.argv[7] == 'true',
+    'sha256_before': sys.argv[8] if sys.argv[8] != 'null' else None,
+    'sha256_after': sys.argv[9] if sys.argv[9] != 'null' else None,
+    'backup_path': sys.argv[10] if sys.argv[10] != 'null' else None,
+}
+print(json.dumps(entry))
+" "$operation" "$action" "$path" "$source" "$existed_before" "$FORCE" "$DRY_RUN" \
+  "$sha256_before" "$sha256_after" "$backup_path" >> "$DOGSQUARD_LEDGER_FILE"
+}
+
+backup_file() {
+  local target_path="$1" relative_path="$2"
+  local timestamp
+  timestamp="$(date +%Y%m%d%H%M%S)"
+  local backup_dir="$TARGET_DIR/.dogsquard/backups/$timestamp"
+  local backup_dest="$backup_dir/$relative_path"
+  mkdir -p "$(dirname "$backup_dest")" || fail "failed to create backup directory for $relative_path"
+  cp "$target_path" "$backup_dest" || fail "failed to backup $relative_path"
+  echo "$backup_dest"
+}
+
 [[ -n "$PROJECT_TYPE" ]] || { usage; fail "PROJECT_TYPE is required."; }
 [[ -n "$TARGET_DIR" ]] || { usage; fail "TARGET_DIR is required."; }
 
@@ -120,8 +156,14 @@ ensure_dir() {
   local dir="$1"
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "mkdir -p $dir"
+    ledger_entry "ensure_dir" "planned" "$dir"
   else
-    mkdir -p "$TARGET_DIR/$dir"
+    if [[ -d "$TARGET_DIR/$dir" ]]; then
+      ledger_entry "ensure_dir" "directory_preexisting" "$dir"
+    else
+      mkdir -p "$TARGET_DIR/$dir"
+      ledger_entry "ensure_dir" "directory_created" "$dir"
+    fi
   fi
 }
 
@@ -129,13 +171,16 @@ touch_file() {
   local dest="$1"
   if [[ -e "$TARGET_DIR/$dest" && "$FORCE" != "true" ]]; then
     echo "SKIP exists: $dest"
+    ledger_entry "touch_file" "skipped" "$dest" "" "true"
     return
   fi
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "touch $dest"
+    ledger_entry "touch_file" "planned" "$dest"
   else
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     : > "$TARGET_DIR/$dest"
+    ledger_entry "touch_file" "created" "$dest"
   fi
 }
 
@@ -147,14 +192,27 @@ copy_file() {
 
   if [[ -e "$TARGET_DIR/$dest" && "$FORCE" != "true" ]]; then
     echo "SKIP exists: $dest"
+    ledger_entry "copy_file" "skipped" "$dest" "$src" "true"
     return
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "copy file: $src -> $dest"
+    ledger_entry "copy_file" "planned" "$dest" "$src"
   else
+    local sha256_before="null" backup_dest="null" existed_before="false"
+    if [[ -e "$TARGET_DIR/$dest" && "$FORCE" == "true" ]]; then
+      sha256_before="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
+      backup_dest="$(backup_file "$TARGET_DIR/$dest" "$dest")"
+      existed_before="true"
+      echo "BACKUP: $dest -> $backup_dest"
+    fi
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     cp "$ROOT_DIR/$src" "$TARGET_DIR/$dest"
+    local sha256_after action
+    sha256_after="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
+    action="$([ "$existed_before" = "true" ] && echo "overwritten" || echo "created")"
+    ledger_entry "copy_file" "$action" "$dest" "$src" "$existed_before" "$sha256_before" "$sha256_after" "$backup_dest"
   fi
 }
 
@@ -166,12 +224,20 @@ copy_dir() {
 
   if [[ -e "$TARGET_DIR/$dest" && "$FORCE" != "true" ]]; then
     echo "SKIP exists: $dest"
+    ledger_entry "copy_dir" "skipped" "$dest" "$src" "true"
     return
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "copy directory: $src -> $dest"
+    ledger_entry "copy_dir" "planned" "$dest" "$src"
   else
+    local backup_dest="null" existed_before="false"
+    if [[ -e "$TARGET_DIR/$dest" && "$FORCE" == "true" ]]; then
+      backup_dest="$(backup_file "$TARGET_DIR/$dest" "$dest")"
+      existed_before="true"
+      echo "BACKUP: $dest -> $backup_dest"
+    fi
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     rm -rf "$TARGET_DIR/$dest"
     mkdir -p "$TARGET_DIR/$dest"
@@ -186,6 +252,9 @@ copy_dir() {
       --exclude='*.local' \
       -C "$ROOT_DIR/$src" \
       -cf - . | tar -C "$TARGET_DIR/$dest" -xf -
+    local action
+    action="$([ "$existed_before" = "true" ] && echo "overwritten" || echo "created")"
+    ledger_entry "copy_dir" "$action" "$dest" "$src" "$existed_before" "null" "null" "$backup_dest"
   fi
 }
 
@@ -198,14 +267,27 @@ write_file() {
   if [[ -e "$TARGET_DIR/$dest" && "$FORCE" != "true" ]]; then
     echo "SKIP exists: $dest"
     rm -f "$tmp"
+    ledger_entry "write_file" "skipped" "$dest" "" "true"
     return
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "write file: $dest"
+    ledger_entry "write_file" "planned" "$dest"
   else
+    local sha256_before="null" backup_dest="null" existed_before="false"
+    if [[ -e "$TARGET_DIR/$dest" && "$FORCE" == "true" ]]; then
+      sha256_before="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
+      backup_dest="$(backup_file "$TARGET_DIR/$dest" "$dest")"
+      existed_before="true"
+      echo "BACKUP: $dest -> $backup_dest"
+    fi
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     cp "$tmp" "$TARGET_DIR/$dest"
+    local sha256_after action
+    sha256_after="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
+    action="$([ "$existed_before" = "true" ] && echo "overwritten" || echo "created")"
+    ledger_entry "write_file" "$action" "$dest" "" "$existed_before" "$sha256_before" "$sha256_after" "$backup_dest"
   fi
   rm -f "$tmp"
 }
@@ -356,6 +438,7 @@ ensure_local_private_ignores() {
     printf '\n# Dogsquard local/private agent files\n'
     printf '%s\n' "${missing[@]}"
   } >> "$TARGET_DIR/.gitignore"
+  ledger_entry "gitignore_append" "appended" ".gitignore"
 }
 
 write_docs_only_makefile() {
@@ -1014,8 +1097,10 @@ GUARD
 
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "chmod +x scripts/production-profile-guard.sh"
+    ledger_entry "chmod" "planned" "scripts/production-profile-guard.sh"
   elif [[ -f "$TARGET_DIR/scripts/production-profile-guard.sh" ]]; then
     chmod +x "$TARGET_DIR/scripts/production-profile-guard.sh"
+    ledger_entry "chmod" "created" "scripts/production-profile-guard.sh"
   fi
 }
 

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard fake-check fake-check-test ai-review-test watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev init-new-repo bootstrap-dry-run bootstrap-test backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard fake-check fake-check-test ai-review-test install-test watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev init-new-repo bootstrap-dry-run bootstrap-test backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -31,6 +31,7 @@ help:
 	@echo "  make rollback-dev HOST=<ssh-target> TARGET_RELEASE=<id> Switch remote current symlink"
 	@echo "  make bootstrap-dry-run TARGET=<path> PROJECT_TYPE=node|go-js|docs-only"
 	@echo "  make bootstrap-test Run profile-aware bootstrap script tests"
+	@echo "  make install-test   Run install shell tests"
 	@echo "  make init-new-repo TARGET=<path> [DRY_RUN=false] Legacy conservative bootstrap"
 	@echo "  make backend-dev   Run the example Go backend"
 	@echo "  make frontend-dev  Run the example frontend dev server"
@@ -228,10 +229,13 @@ bootstrap-dry-run:
 bootstrap-test:
 	@./scripts/test-bootstrap-project.sh
 
+install-test:
+	@./scripts/test-install.sh
+
 backend-dev:
 	@cd backend && go run ./cmd/server
 
 frontend-dev:
 	@cd frontend && npm run dev
 
-release-check: doc-check fake-check ai-review-test lint test frontend-build
+release-check: doc-check fake-check ai-review-test install-test lint test frontend-build

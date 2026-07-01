@@ -121,6 +121,20 @@ assert_not_exists "$target4/.dogsquard"
 assert_not_exists "$target4/scripts/doc-check-local.sh"
 echo "  PASS"
 
+# Test 4b: Interactive menu expands ~/ target paths
+echo "Test 4b: interactive menu expands tilde target path"
+home4b="$TMP_ROOT/home4b"
+target4b="$home4b/dev/eden"
+mkdir -p "$home4b/dev"
+make_target_repo "$target4b"
+output="$(
+  printf '%s\n' '~/dev/eden' 'docs-only' '1' 'no' 'no' 'no' |
+    HOME="$home4b" "$ROOT_DIR/install" --menu 2>&1
+)"
+echo "$output" | grep -q "Target:   $target4b" || fail "interactive tilde path was not expanded"
+assert_not_exists "$target4b/.dogsquard"
+echo "  PASS"
+
 # Test 5: docs-only bootstrap apply creates expected files + manifest
 echo "Test 5: docs-only apply"
 target5="$TMP_ROOT/target-docs"

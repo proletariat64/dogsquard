@@ -210,6 +210,20 @@ PASS
         self.assertNotIn(large_prompt, cmd)
         self.assertEqual(run_capture.call_args.kwargs.get("input_text"), large_prompt)
 
+    def test_ensure_status_line_removes_duplicate_headers(self):
+        comment = """I've completed my review. Here is the review:
+
+### PASS — Dogsquard AI Code Review
+
+## Dogsquard AI Code Review
+
+### Verdict
+NEEDS_ATTENTION
+"""
+        result = self.module.ensure_status_line(comment, "NEEDS_ATTENTION")
+        self.assertTrue(result.startswith("### FAIL — Dogsquard AI Code Review"))
+        self.assertNotIn("### PASS — Dogsquard AI Code Review", result)
+
     def test_disabled_comment_is_not_file_skip(self):
         comment = self.module.disabled_comment("qoder")
 

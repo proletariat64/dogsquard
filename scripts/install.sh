@@ -1150,7 +1150,7 @@ Refusing broad cleanup. Use manual review or a future audited fallback."
   fi
 
   local schema_version
-  schema_version="$(python3 -c "import json; print(json.load(open('$manifest_path'))['schema_version'])")"
+  schema_version="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['schema_version'])" "$manifest_path")"
   [[ "$schema_version" == "1" ]] || fail "unsupported manifest schema version: $schema_version"
 
   echo
@@ -1231,12 +1231,6 @@ if has_failure:
   fi
 
   echo "Executing uninstall..."
-
-  python3 -c "
-import json, hashlib, os, shutil
-
-manifest = json.load(open(sys.argv[1])) if 'sys' in dir() else None
-" 2>/dev/null || true
 
   python3 - "$manifest_path" "$target_dir" <<'PY'
 import json, hashlib, os, shutil, sys

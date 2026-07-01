@@ -51,6 +51,30 @@ validate_bool() {
   esac
 }
 
+ledger_entry() {
+  [[ -n "${DOGSQUARD_LEDGER_FILE:-}" ]] || return 0
+  local operation="$1" action="$2" path="$3" source="${4:-}" existed_before="${5:-false}"
+  local sha256_before="${6:-null}" sha256_after="${7:-null}" backup_path="${8:-null}"
+  python3 -c "
+import json
+entry = {
+    'tool': 'bootstrap-project.sh',
+    'module': 'bootstrap',
+    'operation': '$operation',
+    'action': '$action',
+    'path': '$path',
+    'source': '$source' if '$source' else None,
+    'existed_before': '$existed_before' == 'true',
+    'force': '$FORCE' == 'true',
+    'dry_run': '$DRY_RUN' == 'true',
+    'sha256_before': '$sha256_before' if '$sha256_before' != 'null' else None,
+    'sha256_after': '$sha256_after' if '$sha256_after' != 'null' else None,
+    'backup_path': '$backup_path' if '$backup_path' != 'null' else None,
+}
+print(json.dumps(entry))
+" >> "$DOGSQUARD_LEDGER_FILE"
+}
+
 [[ -n "$PROJECT_TYPE" ]] || { usage; fail "PROJECT_TYPE is required."; }
 [[ -n "$TARGET_DIR" ]] || { usage; fail "TARGET_DIR is required."; }
 
@@ -120,8 +144,14 @@ ensure_dir() {
   local dir="$1"
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "mkdir -p $dir"
+    ledger_entry "ensure_dir" "planned" "$dir"
   else
-    mkdir -p "$TARGET_DIR/$dir"
+    if [[ -d "$TARGET_DIR/$dir" ]]; then
+      ledger_entry "ensure_dir" "directory_preexisting" "$dir"
+    else
+      mkdir -p "$TARGET_DIR/$dir"
+      ledger_entry "ensure_dir" "directory_created" "$dir"
+    fi
   fi
 }
 
@@ -129,13 +159,16 @@ touch_file() {
   local dest="$1"
   if [[ -e "$TARGET_DIR/$dest" && "$FORCE" != "true" ]]; then
     echo "SKIP exists: $dest"
+    ledger_entry "touch_file" "skipped" "$dest" "" "true"
     return
   fi
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "touch $dest"
+    ledger_entry "touch_file" "planned" "$dest"
   else
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     : > "$TARGET_DIR/$dest"
+    ledger_entry "touch_file" "created" "$dest"
   fi
 }
 
@@ -147,14 +180,19 @@ copy_file() {
 
   if [[ -e "$TARGET_DIR/$dest" && "$FORCE" != "true" ]]; then
     echo "SKIP exists: $dest"
+    ledger_entry "copy_file" "skipped" "$dest" "$src" "true"
     return
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "copy file: $src -> $dest"
+    ledger_entry "copy_file" "planned" "$dest" "$src"
   else
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     cp "$ROOT_DIR/$src" "$TARGET_DIR/$dest"
+    local sha256_after
+    sha256_after="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
+    ledger_entry "copy_file" "created" "$dest" "$src" "false" "null" "$sha256_after"
   fi
 }
 
@@ -166,11 +204,13 @@ copy_dir() {
 
   if [[ -e "$TARGET_DIR/$dest" && "$FORCE" != "true" ]]; then
     echo "SKIP exists: $dest"
+    ledger_entry "copy_dir" "skipped" "$dest" "$src" "true"
     return
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "copy directory: $src -> $dest"
+    ledger_entry "copy_dir" "planned" "$dest" "$src"
   else
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     rm -rf "$TARGET_DIR/$dest"
@@ -186,6 +226,7 @@ copy_dir() {
       --exclude='*.local' \
       -C "$ROOT_DIR/$src" \
       -cf - . | tar -C "$TARGET_DIR/$dest" -xf -
+    ledger_entry "copy_dir" "created" "$dest" "$src"
   fi
 }
 
@@ -198,14 +239,19 @@ write_file() {
   if [[ -e "$TARGET_DIR/$dest" && "$FORCE" != "true" ]]; then
     echo "SKIP exists: $dest"
     rm -f "$tmp"
+    ledger_entry "write_file" "skipped" "$dest" "" "true"
     return
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "write file: $dest"
+    ledger_entry "write_file" "planned" "$dest"
   else
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     cp "$tmp" "$TARGET_DIR/$dest"
+    local sha256_after
+    sha256_after="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
+    ledger_entry "write_file" "created" "$dest" "" "false" "null" "$sha256_after"
   fi
   rm -f "$tmp"
 }
@@ -356,6 +402,7 @@ ensure_local_private_ignores() {
     printf '\n# Dogsquard local/private agent files\n'
     printf '%s\n' "${missing[@]}"
   } >> "$TARGET_DIR/.gitignore"
+  ledger_entry "gitignore_append" "appended" ".gitignore"
 }
 
 write_docs_only_makefile() {
@@ -1014,8 +1061,10 @@ GUARD
 
   if [[ "$DRY_RUN" == "true" ]]; then
     plan "chmod +x scripts/production-profile-guard.sh"
+    ledger_entry "chmod" "planned" "scripts/production-profile-guard.sh"
   elif [[ -f "$TARGET_DIR/scripts/production-profile-guard.sh" ]]; then
     chmod +x "$TARGET_DIR/scripts/production-profile-guard.sh"
+    ledger_entry "chmod" "created" "scripts/production-profile-guard.sh"
   fi
 }
 

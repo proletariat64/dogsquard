@@ -34,7 +34,8 @@ jobs:
 
     env:
       PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
-      AI_REVIEW_ENGINE: ${{ github.event_name == 'workflow_dispatch' && inputs.ai_review_engine || vars.AI_REVIEW_ENGINE || 'claude-deepseek' }}
+      AI_REVIEW_ENGINE_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.ai_review_engine || '' }}
+      AI_REVIEW_ENGINE: ${{ vars.AI_REVIEW_ENGINE || '' }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ANTHROPIC_AUTH_TOKEN: ${{ secrets.DEEPSEEK_AUTH_TOKEN }}
@@ -53,14 +54,40 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Resolve AI review config
+        id: ai-review-config
+        shell: bash
+        run: |
+          set -euo pipefail
+          config_json="$(python3 .github/workflows/scripts/ai_review_pr.py --resolve-config)"
+          python3 - "$config_json" <<'PY'
+          import json
+          import os
+          import sys
+
+          config = json.loads(sys.argv[1])
+          enabled = "true" if config["enabled"] else "false"
+          engine = config["engine"]
+
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
+              env_file.write(f"AI_REVIEW_ENGINE={engine}\n")
+              env_file.write(f"AI_REVIEW_EFFECTIVE_ENABLED={enabled}\n")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output_file:
+              output_file.write(f"engine={engine}\n")
+              output_file.write(f"enabled={enabled}\n")
+          print(f"AI review enabled: {enabled}")
+          print(f"Selected AI review engine: {engine}")
+          PY
+
       - name: Show AI review engine
         shell: bash
         run: |
           set -euo pipefail
+          echo "AI review enabled: ${AI_REVIEW_EFFECTIVE_ENABLED}"
           echo "Selected AI review engine: ${AI_REVIEW_ENGINE}"
 
       - name: Restore qodercli cache
-        if: ${{ env.AI_REVIEW_ENGINE == 'qoder' }}
+        if: ${{ steps.ai-review-config.outputs.enabled == 'true' && steps.ai-review-config.outputs.engine == 'qoder' }}
         id: qodercli-cache-restore
         uses: actions/cache/restore@v4
         with:
@@ -68,7 +95,7 @@ jobs:
           key: qodercli-${{ runner.os }}-${{ runner.arch }}-${{ env.QODERCLI_VERSION }}
 
       - name: Install qodercli
-        if: ${{ env.AI_REVIEW_ENGINE == 'qoder' && steps.qodercli-cache-restore.outputs.cache-hit != 'true' }}
+        if: ${{ steps.ai-review-config.outputs.enabled == 'true' && steps.ai-review-config.outputs.engine == 'qoder' && steps.qodercli-cache-restore.outputs.cache-hit != 'true' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -76,19 +103,19 @@ jobs:
           npm install -g "@qoder-ai/qodercli@${QODERCLI_VERSION}" --prefix "$GITHUB_WORKSPACE/$QODERCLI_CACHE_DIR"
 
       - name: Save qodercli cache
-        if: ${{ env.AI_REVIEW_ENGINE == 'qoder' && steps.qodercli-cache-restore.outputs.cache-hit != 'true' }}
+        if: ${{ steps.ai-review-config.outputs.enabled == 'true' && steps.ai-review-config.outputs.engine == 'qoder' && steps.qodercli-cache-restore.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
         with:
           path: ${{ env.QODERCLI_CACHE_DIR }}
           key: ${{ steps.qodercli-cache-restore.outputs.cache-primary-key }}
 
       - name: Add qodercli to PATH
-        if: ${{ env.AI_REVIEW_ENGINE == 'qoder' }}
+        if: ${{ steps.ai-review-config.outputs.enabled == 'true' && steps.ai-review-config.outputs.engine == 'qoder' }}
         shell: bash
         run: echo "$GITHUB_WORKSPACE/$QODERCLI_CACHE_DIR/bin" >> "$GITHUB_PATH"
 
       - name: Check qodercli version
-        if: ${{ env.AI_REVIEW_ENGINE == 'qoder' }}
+        if: ${{ steps.ai-review-config.outputs.enabled == 'true' && steps.ai-review-config.outputs.engine == 'qoder' }}
         shell: bash
         run: |
           set -euo pipefail

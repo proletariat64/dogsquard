@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help test lint doc-check doc-guard fake-check fake-check-test watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev init-new-repo bootstrap-dry-run bootstrap-test backend-dev frontend-dev release-check
+.PHONY: help test lint doc-check doc-guard fake-check fake-check-test ai-review-test watch-docs agent-docs backend-test frontend-build smoke-api e2e-smoke server-preflight package-release deploy-dev deploy-dev-dry-run runtime-status runtime-start runtime-stop runtime-restart runtime-health runtime-logs runtime-diagnose rollback-dev init-new-repo bootstrap-dry-run bootstrap-test backend-dev frontend-dev release-check
 
 help:
 	@echo "Available commands:"
@@ -10,6 +10,7 @@ help:
 	@echo "  make doc-check     Run local documentation checks"
 	@echo "  make doc-guard     Run Doc Watch Guard report"
 	@echo "  make fake-check    Run AI fake-completion implementation guard"
+	@echo "  make ai-review-test Run focused AI PR review runner tests"
 	@echo "  make watch-docs    Re-run doc checks in a loop"
 	@echo "  make agent-docs    Print a safe agent documentation review prompt"
 	@echo "  make backend-test  Run backend Go tests"
@@ -96,6 +97,12 @@ fake-check:
 
 fake-check-test:
 	@./scripts/test-fake-implementation-guard.sh
+
+ai-review-test:
+	@python3 -m unittest discover -s tests -p 'test_*.py'
+	@bash -n scripts/configure-ai-ci.sh scripts/upsert-pr-comment.sh scripts/test-configure-ai-ci.sh scripts/test-upsert-pr-comment.sh
+	@./scripts/test-configure-ai-ci.sh
+	@./scripts/test-upsert-pr-comment.sh
 
 watch-docs:
 	@./scripts/watch-docs.sh
@@ -227,4 +234,4 @@ backend-dev:
 frontend-dev:
 	@cd frontend && npm run dev
 
-release-check: doc-check fake-check lint test frontend-build
+release-check: doc-check fake-check ai-review-test lint test frontend-build

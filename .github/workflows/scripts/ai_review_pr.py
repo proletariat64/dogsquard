@@ -96,6 +96,15 @@ REQUIRED_SECTIONS = (
     "### Engine details",
 )
 
+QODER_DEFAULT_MODEL_PREFERENCE = ("latest-glm", "Qwen3.7-Max", "Auto")
+QODER_RETRYABLE_FAILURE_TEXT = (
+    "restricted for this repository by a security policy",
+    "model is not available",
+    "model not available",
+    "invalid model",
+    "unknown model",
+)
+
 
 class ReviewFailure(Exception):
     def __init__(self, message: str, engine: str = "unknown") -> None:
@@ -254,7 +263,9 @@ def should_skip_review(files: list[str]) -> bool:
 
 def skip_comment(engine: str, files: list[str]) -> str:
     changed = "\n".join(f"- `{path}`" for path in files)
-    return f"""## 🤖 Dogsquard AI Code Review
+    return f"""PASS — Dogsquard AI Code Review
+
+## 🤖 Dogsquard AI Code Review
 
 {COMMENT_MARKER}
 
@@ -293,7 +304,9 @@ SKIP
 
 def failure_comment(reason: str, engine: str = "unknown") -> str:
     safe_reason = redact_known_secrets(reason).strip() or "Unknown failure."
-    return f"""## 🤖 Dogsquard AI Code Review
+    return f"""FAIL — Dogsquard AI Code Review
+
+## 🤖 Dogsquard AI Code Review
 
 {COMMENT_MARKER}
 
@@ -372,6 +385,81 @@ def load_qoder_settings() -> dict[str, Any]:
     return data
 
 
+def qodercli_bin() -> str:
+    return os.getenv("QODERCLI_BIN") or "qodercli"
+
+
+def parse_qoder_model_list(text: str) -> list[str]:
+    models: list[str] = []
+    for line in text.splitlines():
+        value = line.strip()
+        if not value or value.upper() == "MODEL":
+            continue
+        models.append(value)
+    return models
+
+
+def glm_version_key(model: str) -> tuple[int, ...]:
+    match = re.search(r"\bGLM[-_]?(\d+(?:\.\d+)*)", model, flags=re.IGNORECASE)
+    if not match:
+        return (0,)
+    return tuple(int(part) for part in match.group(1).split("."))
+
+
+def latest_glm_model(models: list[str]) -> str | None:
+    glms = [model for model in models if model.upper().startswith("GLM")]
+    if not glms:
+        return None
+    return max(glms, key=lambda model: (glm_version_key(model), model))
+
+
+def qoder_model_preference(settings: dict[str, Any]) -> list[str]:
+    raw = settings.get("model_preference") or settings.get("settings", {}).get("model_preference")
+    if raw is None and (settings.get("model") or settings.get("settings", {}).get("model")):
+        raw = [settings.get("model") or settings.get("settings", {}).get("model")]
+    if raw is None:
+        return list(QODER_DEFAULT_MODEL_PREFERENCE)
+    if not isinstance(raw, list) or not all(isinstance(item, str) and item.strip() for item in raw):
+        raise ReviewFailure(".github/qoder/settings.json model_preference must be a non-empty string list", "qoder")
+    return [item.strip() for item in raw]
+
+
+def resolve_qoder_models(settings: dict[str, Any]) -> list[str]:
+    preference = qoder_model_preference(settings)
+    code, stdout, stderr = run_capture([qodercli_bin(), "--list-models"], timeout_seconds=60)
+    if code != 0:
+        log(f"Qoder model list failed; using configured fallback order: {redact_known_secrets(stderr.strip() or stdout.strip())}")
+        return ["Auto"]
+
+    available = parse_qoder_model_list(stdout)
+    selected: list[str] = []
+    for item in preference:
+        if item == "latest-glm":
+            glm = latest_glm_model(available)
+            if glm:
+                selected.append(glm)
+            continue
+        if item in available or item == "Auto":
+            selected.append(item)
+
+    if not selected:
+        selected.append("Auto")
+
+    deduped: list[str] = []
+    for model in selected:
+        if model not in deduped:
+            deduped.append(model)
+    log(f"Qoder model preference resolved: {', '.join(deduped)}")
+    return deduped
+
+
+def qoder_failure_is_retryable(code: int, stdout: str, stderr: str) -> bool:
+    if code == 124:
+        return True
+    combined = f"{stdout}\n{stderr}".lower()
+    return any(needle in combined for needle in QODER_RETRYABLE_FAILURE_TEXT)
+
+
 def run_claude_deepseek(prompt: str) -> tuple[str, str]:
     engine = "claude-deepseek"
     require_env("ANTHROPIC_AUTH_TOKEN", engine)
@@ -398,22 +486,30 @@ def run_qoder(prompt: str) -> tuple[str, str]:
     engine = "qoder"
     require_env("QODER_PERSONAL_ACCESS_TOKEN", engine)
     settings = load_qoder_settings()
-    model = str(settings.get("model") or settings.get("settings", {}).get("model") or "Auto")
-    cmd = [
-        "qodercli",
-        "--model",
-        model,
-        "--output-format",
-        "text",
-        "-p",
-        prompt,
-    ]
-    log(f"Qoder invocation: starting qodercli with model {model}")
-    code, stdout, stderr = run_capture(cmd, timeout_seconds=qoder_timeout_seconds())
-    if code != 0:
+    models = resolve_qoder_models(settings)
+    failures: list[str] = []
+    for index, model in enumerate(models):
+        cmd = [
+            qodercli_bin(),
+            "--model",
+            model,
+            "--output-format",
+            "text",
+            "-p",
+            prompt,
+        ]
+        log(f"Qoder invocation: starting qodercli with model {model}")
+        code, stdout, stderr = run_capture(cmd, timeout_seconds=qoder_timeout_seconds())
+        if code == 0:
+            return stdout, model
+
         detail = stderr.strip() or stdout.strip() or f"qodercli exited with {code}"
-        raise ReviewFailure(f"qoder provider failed: {redact_known_secrets(detail)}", engine)
-    return stdout, model
+        failures.append(f"{model}: {redact_known_secrets(detail)}")
+        if index == len(models) - 1 or not qoder_failure_is_retryable(code, stdout, stderr):
+            raise ReviewFailure(f"qoder provider failed: {'; '.join(failures)}", engine)
+        log(f"Qoder model {model} failed with retryable error; trying next configured model.")
+
+    raise ReviewFailure("qoder provider failed before invocation", engine)
 
 
 def extract_comment(text: str) -> str:
@@ -425,6 +521,36 @@ def extract_comment(text: str) -> str:
     return cleaned + "\n"
 
 
+def verdict_from_comment(comment: str, engine: str) -> str:
+    match = re.search(r"(?ms)^### Verdict\s*\n([A-Z_]+)\s*$", comment)
+    if not match:
+        raise ReviewFailure("Provider output missing valid verdict value.", engine)
+    verdict = match.group(1).strip()
+    if verdict not in VALID_VERDICTS:
+        raise ReviewFailure(f"Provider output has invalid verdict: {verdict}", engine)
+    return verdict
+
+
+def pass_fail_for_verdict(verdict: str) -> str:
+    return "PASS" if verdict in {"PASS", "SKIP"} else "FAIL"
+
+
+def ensure_status_line(comment: str, verdict: str) -> str:
+    desired = f"{pass_fail_for_verdict(verdict)} — Dogsquard AI Code Review"
+    lines = comment.strip().splitlines()
+    first = lines[0].strip() if lines else ""
+    if first.startswith("PASS — Dogsquard AI Code Review") or first.startswith("FAIL — Dogsquard AI Code Review"):
+        lines[0] = desired
+        return "\n".join(lines).strip() + "\n"
+    return f"{desired}\n\n{comment.strip()}\n"
+
+
+def set_engine_details(comment: str, engine: str, model: str) -> str:
+    normalized = re.sub(r"(?m)^- Engine: .*$", f"- Engine: {engine}", comment)
+    normalized = re.sub(r"(?m)^- Model: .*$", f"- Model: {model}", normalized)
+    return normalized
+
+
 def validate_review_output(text: str, engine: str) -> str:
     comment = extract_comment(text)
     missing = [section for section in REQUIRED_SECTIONS if section not in comment]
@@ -433,16 +559,11 @@ def validate_review_output(text: str, engine: str) -> str:
     if COMMENT_MARKER not in comment:
         raise ReviewFailure("Provider output missing Dogsquard comment marker.", engine)
 
-    match = re.search(r"(?ms)^### Verdict\s*\n([A-Z_]+)\s*$", comment)
-    if not match:
-        raise ReviewFailure("Provider output missing valid verdict value.", engine)
-    verdict = match.group(1).strip()
-    if verdict not in VALID_VERDICTS:
-        raise ReviewFailure(f"Provider output has invalid verdict: {verdict}", engine)
+    verdict = verdict_from_comment(comment, engine)
 
     if "### Engine details" in comment and f"Engine: {engine}" not in comment:
         log(f"Provider output engine details did not explicitly match {engine}; normalizing is not attempted.")
-    return comment
+    return ensure_status_line(comment, verdict)
 
 
 def main() -> int:
@@ -465,8 +586,7 @@ def main() -> int:
             raise ReviewFailure(f"Unhandled engine: {engine}", engine)
 
         comment = validate_review_output(provider_output, engine)
-        if "### Engine details" in comment and "Model: unknown" in comment and model != "unknown":
-            comment = comment.replace("Model: unknown", f"Model: {model}", 1)
+        comment = set_engine_details(comment, engine, model)
         write_review(comment)
         return 0
     except ReviewFailure as exc:

@@ -1,7 +1,11 @@
 {
   "note": "Qoder CLI CI configuration. Keep only non-secret provider settings here.",
   "secrets_policy": "Do not store tokens, cookies, personal access tokens, or other secrets in this file.",
-  "model": "Auto",
+  "model_preference": [
+    "latest-glm",
+    "Qwen3.7-Max",
+    "Auto"
+  ],
   "timeout_seconds": 600,
   "settings": {}
 }

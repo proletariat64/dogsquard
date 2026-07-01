@@ -1,8 +1,13 @@
 # Dogsquard PR Review Output Contract
 
-Return exactly one Dogsquard review comment in this shape:
+Return exactly one Dogsquard review comment in this shape. The first line must be a clear status line:
+
+- `PASS — Dogsquard AI Code Review` when the verdict is `PASS` or `SKIP`.
+- `FAIL — Dogsquard AI Code Review` when the verdict is `NEEDS_ATTENTION` or `HIGH_RISK`.
 
 ```markdown
+PASS — Dogsquard AI Code Review
+
 ## 🤖 Dogsquard AI Code Review
 
 <!-- dogsquard-ai-code-review -->

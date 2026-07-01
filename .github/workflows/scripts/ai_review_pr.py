@@ -589,10 +589,9 @@ def run_qoder(prompt: str, settings: dict[str, Any]) -> tuple[str, str]:
             "--output-format",
             "text",
             "-p",
-            prompt,
         ]
         log(f"Qoder invocation: starting qodercli with model {model}")
-        code, stdout, stderr = run_capture(cmd, timeout_seconds=timeout_seconds)
+        code, stdout, stderr = run_capture(cmd, input_text=prompt, timeout_seconds=timeout_seconds)
         if code == 0:
             try:
                 return validate_review_output(stdout, engine), model

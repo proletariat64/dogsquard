@@ -14,8 +14,10 @@ PROMPT_FILE = TMP_DIR / "prompt.md"
 PR_JSON_FILE = TMP_DIR / "pr.json"
 PR_PATCH_FILE = TMP_DIR / "pr.patch"
 PR_FILES_FILE = TMP_DIR / "files.txt"
+AI_REVIEW_SETTINGS_FILE = Path(".github/ai-review/settings.json")
 
 VALID_ENGINES = {"claude-deepseek", "qoder"}
+VALID_CLAUDE_PROVIDERS = {"deepseek"}
 VALID_VERDICTS = {"PASS", "NEEDS_ATTENTION", "HIGH_RISK", "SKIP"}
 PROVIDER_TIMEOUT_SECONDS = 600
 MAX_COMMENT_CHARS = 60000
@@ -96,14 +98,22 @@ REQUIRED_SECTIONS = (
     "### Engine details",
 )
 
-QODER_DEFAULT_MODEL_PREFERENCE = ("latest-glm", "Qwen3.7-Max", "Auto")
+QODER_DEFAULT_MODELS = ("Qwen3.7-Max",)
 QODER_RETRYABLE_FAILURE_TEXT = (
     "restricted for this repository by a security policy",
+    "model unavailable",
     "model is not available",
     "model not available",
+    "model restricted",
     "invalid model",
     "unknown model",
 )
+DEFAULT_AI_REVIEW_SETTINGS: dict[str, Any] = {
+    "enabled": True,
+    "engine": "claude-deepseek",
+    "claude": {"provider": "deepseek"},
+    "qoder": {"models": list(QODER_DEFAULT_MODELS), "implicit_auto_fallback": True},
+}
 
 
 class ReviewFailure(Exception):
@@ -171,11 +181,55 @@ def write_review(body: str) -> None:
     REVIEW_FILE.write_text(redact_known_secrets(body), encoding="utf-8")
 
 
-def resolve_engine() -> str:
-    engine = (os.getenv("AI_REVIEW_ENGINE") or "claude-deepseek").strip() or "claude-deepseek"
+def load_ai_review_settings() -> dict[str, Any]:
+    if not AI_REVIEW_SETTINGS_FILE.is_file():
+        return json.loads(json.dumps(DEFAULT_AI_REVIEW_SETTINGS))
+    with AI_REVIEW_SETTINGS_FILE.open(encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} must contain a JSON object")
+    return data
+
+
+def resolve_enabled(settings: dict[str, Any]) -> bool:
+    enabled = settings.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} field enabled must be boolean")
+    return enabled
+
+
+def validate_engine(engine: str) -> str:
     if engine not in VALID_ENGINES:
-        raise ReviewFailure(f"Invalid AI_REVIEW_ENGINE: {engine!r}", engine)
+        raise ReviewFailure(f"Invalid AI review engine: {engine!r}", engine)
     return engine
+
+
+def resolve_engine(settings: dict[str, Any]) -> str:
+    dispatch_engine = (os.getenv("AI_REVIEW_ENGINE_INPUT") or "").strip()
+    if dispatch_engine:
+        return validate_engine(dispatch_engine)
+
+    configured_engine = settings.get("engine")
+    if isinstance(configured_engine, str) and configured_engine.strip():
+        return validate_engine(configured_engine.strip())
+
+    legacy_engine = (os.getenv("AI_REVIEW_ENGINE") or "").strip()
+    if legacy_engine:
+        return validate_engine(legacy_engine)
+
+    return "claude-deepseek"
+
+
+def resolve_claude_provider(settings: dict[str, Any]) -> str:
+    claude_settings = settings.get("claude", {})
+    if claude_settings is None:
+        claude_settings = {}
+    if not isinstance(claude_settings, dict):
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} field claude must be an object", "claude-deepseek")
+    provider = str(claude_settings.get("provider") or "deepseek").strip()
+    if provider not in VALID_CLAUDE_PROVIDERS:
+        raise ReviewFailure(f"Invalid Claude provider: {provider!r}", "claude-deepseek")
+    return provider
 
 
 def provider_timeout_seconds() -> int:
@@ -302,6 +356,44 @@ SKIP
 """
 
 
+def disabled_comment(engine: str) -> str:
+    return f"""### PASS — Dogsquard AI Code Review
+
+## 🤖 Dogsquard AI Code Review
+
+{COMMENT_MARKER}
+
+### Verdict
+SKIP
+
+### What changed
+- AI review is disabled by `.github/ai-review/settings.json`.
+
+### Must fix
+- None.
+
+### Should consider
+- Re-enable AI review through `scripts/configure-ai-ci.sh --enabled true --apply` when advisory review is wanted.
+
+### Test gaps
+- Provider review was not run because AI review is disabled by configuration.
+
+### Acceptance check
+- Not evaluated because AI review is disabled by configuration.
+
+### File-skip check
+- Skip used: yes.
+- Reason: AI review disabled by configuration.
+
+### Dogsquard boundary check
+- Deterministic `PR Quality Gate` remains the merge authority.
+
+### Engine details
+- Engine: {engine}
+- Model: disabled
+"""
+
+
 def failure_comment(reason: str, engine: str = "unknown") -> str:
     safe_reason = redact_known_secrets(reason).strip() or "Unknown failure."
     return f"""### FAIL — Dogsquard AI Code Review
@@ -385,6 +477,17 @@ def load_qoder_settings() -> dict[str, Any]:
     return data
 
 
+def qoder_settings_timeout(settings: dict[str, Any]) -> int:
+    raw = settings.get("timeout_seconds")
+    if raw is None:
+        return provider_timeout_seconds()
+    try:
+        parsed = int(raw)
+    except (TypeError, ValueError):
+        return provider_timeout_seconds()
+    return parsed if parsed > 0 else provider_timeout_seconds()
+
+
 def qodercli_bin() -> str:
     return os.getenv("QODERCLI_BIN") or "qodercli"
 
@@ -413,43 +516,39 @@ def latest_glm_model(models: list[str]) -> str | None:
     return max(glms, key=lambda model: (glm_version_key(model), model))
 
 
-def qoder_model_preference(settings: dict[str, Any]) -> list[str]:
-    raw = settings.get("model_preference") or settings.get("settings", {}).get("model_preference")
-    if raw is None and (settings.get("model") or settings.get("settings", {}).get("model")):
-        raw = [settings.get("model") or settings.get("settings", {}).get("model")]
-    if raw is None:
-        return list(QODER_DEFAULT_MODEL_PREFERENCE)
-    if not isinstance(raw, list) or not all(isinstance(item, str) and item.strip() for item in raw):
-        raise ReviewFailure(".github/qoder/settings.json model_preference must be a non-empty string list", "qoder")
-    return [item.strip() for item in raw]
+def configured_qoder_models(settings: dict[str, Any]) -> list[str]:
+    qoder_settings = settings.get("qoder", {})
+    if qoder_settings is None:
+        qoder_settings = {}
+    if not isinstance(qoder_settings, dict):
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} field qoder must be an object", "qoder")
+    if qoder_settings.get("implicit_auto_fallback") is not True:
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} qoder.implicit_auto_fallback must be true", "qoder")
 
-
-def resolve_qoder_models(settings: dict[str, Any]) -> list[str]:
-    preference = qoder_model_preference(settings)
-    code, stdout, stderr = run_capture([qodercli_bin(), "--list-models"], timeout_seconds=60)
-    if code != 0:
-        log(f"Qoder model list failed; using configured fallback order: {redact_known_secrets(stderr.strip() or stdout.strip())}")
-        return ["Auto"]
-
-    available = parse_qoder_model_list(stdout)
-    selected: list[str] = []
-    for item in preference:
-        if item == "latest-glm":
-            glm = latest_glm_model(available)
-            if glm:
-                selected.append(glm)
-            continue
-        if item in available or item == "Auto":
-            selected.append(item)
-
-    if not selected:
-        selected.append("Auto")
+    raw = qoder_settings.get("models", list(QODER_DEFAULT_MODELS))
+    if not isinstance(raw, list):
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} qoder.models must be a string list", "qoder")
+    models = [item.strip() for item in raw if isinstance(item, str) and item.strip()]
+    if len(models) != len(raw):
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} qoder.models must contain only non-empty strings", "qoder")
+    if not 1 <= len(models) <= 2:
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} qoder.models must contain one or two models", "qoder")
+    if any(model.lower() == "auto" for model in models):
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} qoder.models must not include Auto", "qoder")
 
     deduped: list[str] = []
-    for model in selected:
+    for model in models:
         if model not in deduped:
             deduped.append(model)
-    log(f"Qoder model preference resolved: {', '.join(deduped)}")
+    if len(deduped) != len(models):
+        raise ReviewFailure(f"{AI_REVIEW_SETTINGS_FILE} qoder.models must not contain duplicates", "qoder")
+    return deduped
+
+
+def resolve_qoder_model_sequence(settings: dict[str, Any]) -> list[str]:
+    deduped = configured_qoder_models(settings)
+    deduped.append("Auto")
+    log(f"Qoder model sequence resolved: {', '.join(deduped)}")
     return deduped
 
 
@@ -460,8 +559,10 @@ def qoder_failure_is_retryable(code: int, stdout: str, stderr: str) -> bool:
     return any(needle in combined for needle in QODER_RETRYABLE_FAILURE_TEXT)
 
 
-def run_claude_deepseek(prompt: str) -> tuple[str, str]:
+def run_claude_deepseek(prompt: str, provider: str) -> tuple[str, str]:
     engine = "claude-deepseek"
+    if provider != "deepseek":
+        raise ReviewFailure(f"Unsupported Claude provider: {provider}", engine)
     require_env("ANTHROPIC_AUTH_TOKEN", engine)
     settings_path = Path(".github/claude/deepseek-settings.json")
     if not settings_path.is_file():
@@ -482,11 +583,12 @@ def run_claude_deepseek(prompt: str) -> tuple[str, str]:
     return stdout, "configured by .github/claude/deepseek-settings.json"
 
 
-def run_qoder(prompt: str) -> tuple[str, str]:
+def run_qoder(prompt: str, settings: dict[str, Any]) -> tuple[str, str]:
     engine = "qoder"
     require_env("QODER_PERSONAL_ACCESS_TOKEN", engine)
-    settings = load_qoder_settings()
-    models = resolve_qoder_models(settings)
+    qoder_settings = load_qoder_settings()
+    timeout_seconds = qoder_settings_timeout(qoder_settings)
+    models = resolve_qoder_model_sequence(settings)
     failures: list[str] = []
     for index, model in enumerate(models):
         cmd = [
@@ -499,9 +601,17 @@ def run_qoder(prompt: str) -> tuple[str, str]:
             prompt,
         ]
         log(f"Qoder invocation: starting qodercli with model {model}")
-        code, stdout, stderr = run_capture(cmd, timeout_seconds=qoder_timeout_seconds())
+        code, stdout, stderr = run_capture(cmd, timeout_seconds=timeout_seconds)
         if code == 0:
-            return stdout, model
+            try:
+                return validate_review_output(stdout, engine), model
+            except ReviewFailure as exc:
+                detail = str(exc)
+                failures.append(f"{model}: invalid Dogsquard output: {redact_known_secrets(detail)}")
+                if index == len(models) - 1:
+                    raise ReviewFailure(f"qoder provider failed: {'; '.join(failures)}", engine)
+                log(f"Qoder model {model} returned invalid Dogsquard output; trying next configured model.")
+                continue
 
         detail = stderr.strip() or stdout.strip() or f"qodercli exited with {code}"
         failures.append(f"{model}: {redact_known_secrets(detail)}")
@@ -575,8 +685,15 @@ def validate_review_output(text: str, engine: str) -> str:
 def main() -> int:
     engine = "unknown"
     try:
-        engine = resolve_engine()
+        settings = load_ai_review_settings()
+        engine = resolve_engine(settings)
         log(f"Selected AI review engine: {engine}")
+
+        if not resolve_enabled(settings):
+            write_review(disabled_comment(engine))
+            log("AI review disabled by .github/ai-review/settings.json")
+            return 0
+
         context = collect_pr_context(engine)
 
         if context["skip"]:
@@ -585,13 +702,14 @@ def main() -> int:
 
         prompt = build_prompt(engine, context)
         if engine == "claude-deepseek":
-            provider_output, model = run_claude_deepseek(prompt)
+            provider = resolve_claude_provider(settings)
+            provider_output, model = run_claude_deepseek(prompt, provider)
+            comment = validate_review_output(provider_output, engine)
         elif engine == "qoder":
-            provider_output, model = run_qoder(prompt)
+            comment, model = run_qoder(prompt, settings)
         else:
             raise ReviewFailure(f"Unhandled engine: {engine}", engine)
 
-        comment = validate_review_output(provider_output, engine)
         comment = set_engine_details(comment, engine, model)
         write_review(comment)
         return 0

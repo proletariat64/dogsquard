@@ -193,3 +193,65 @@ Invalid engine values should fail before calling any provider. The runner must n
 - The selected AI review provider must not fall back to another provider.
 - The unified workflow preserves the Dogsquard comment marker: `<!-- dogsquard-ai-code-review -->`.
 - The shared review prompt starts from the existing Dogsquard AI review prompt and folds in useful Qoder scaffold improvements only where they improve output quality and failure visibility.
+
+## New Feature: AI CI Configure Shell
+
+Dogsquard should provide a simple shell-based configuration entrypoint for AI CI review settings.
+
+Purpose:
+
+- let the user enable or disable AI CI without editing workflow YAML by hand
+- choose the active AI review engine
+- choose provider/model settings through an explicit menu
+- apply the selected changes to repository config in a visible, reviewable way
+
+Required configuration choices:
+
+1. AI CI on/off.
+2. Engine selection:
+   - `claude-deepseek`
+   - `qoder`
+3. Model/provider selection:
+   - Claude path uses a provider list. Each provider defines the non-secret environment config and required secret names. Initial provider list contains only `deepseek`.
+   - Qoder path uses a model list. The user must select at least one model and at most two models.
+   - Qoder `auto` is always the implicit final fallback. It is not a user-selectable model and is present even when the user chooses no explicit fallback beyond the required first model.
+4. Activate changes.
+
+Qoder fallback ordering rule:
+
+- The fallback sequence starts as `[auto]`.
+- Each user-selected model is pushed to the front of the sequence.
+- Example: selecting GLM-5.2 produces `[GLM-5.2, auto]`.
+- Selecting Qwen3.7-Max after GLM-5.2 produces `[Qwen3.7-Max, GLM-5.2, auto]`.
+- Runtime attempts the sequence from left to right, so the most recently selected model is tried first.
+- The runner must report the actual model used in the final review comment when visible.
+
+Configuration shell behavior:
+
+- Proposed command name: `scripts/configure-ai-ci.sh` or `./install --configure-ai-ci`.
+- Dry-run should be available and preferred before activation.
+- The shell should print the generated config diff or affected files before applying.
+- Activation may update repository variables, config files, or workflow inputs, but must not print or store secret values.
+- Missing secrets should be reported as setup requirements, not hidden as success.
+- Invalid engine, provider, or model choices must fail before workflow activation.
+- Disabling AI CI should be explicit and should not delete deterministic `PR Quality Gate`.
+
+Settled implementation decisions:
+
+- AI CI on/off is controlled by repository configuration file, not by deleting workflow files or using a repo variable as the source of truth.
+- The configuration shell defaults to local file changes only.
+- A separate explicit flag such as `--apply-github-vars` may update non-secret GitHub repository variables for live activation or compatibility, but the config file remains the canonical source.
+- Qoder model fallback includes provider invocation failure, unavailable/restricted model failure, timeout, and invalid output contract.
+- Qoder model fallback is provider-local only. It must not fall back from Qoder to Claude, or from Claude to Qoder.
+- The primary user experience is an interactive command-line menu; direct flags may exist for repeatable automation.
+
+Acceptance additions:
+
+- User can turn AI CI on or off through the configuration shell.
+- User can choose Claude+DeepSeek or Qoder through the configuration shell.
+- Claude configuration exposes provider choice with DeepSeek as the first supported provider.
+- Qoder configuration enforces one or two user-selected models plus implicit final `auto` fallback.
+- Qoder tries the next configured model when a prior model fails invocation or returns invalid Dogsquard review output.
+- Qoder fallback order follows last-selected-first-tried semantics.
+- Activating config changes is explicit and reviewable.
+- Deterministic PR Quality Gate remains separate and unchanged.

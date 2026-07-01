@@ -56,23 +56,35 @@ ledger_entry() {
   local operation="$1" action="$2" path="$3" source="${4:-}" existed_before="${5:-false}"
   local sha256_before="${6:-null}" sha256_after="${7:-null}" backup_path="${8:-null}"
   python3 -c "
-import json
+import json, sys
 entry = {
     'tool': 'bootstrap-project.sh',
     'module': 'bootstrap',
-    'operation': '$operation',
-    'action': '$action',
-    'path': '$path',
-    'source': '$source' if '$source' else None,
-    'existed_before': '$existed_before' == 'true',
-    'force': '$FORCE' == 'true',
-    'dry_run': '$DRY_RUN' == 'true',
-    'sha256_before': '$sha256_before' if '$sha256_before' != 'null' else None,
-    'sha256_after': '$sha256_after' if '$sha256_after' != 'null' else None,
-    'backup_path': '$backup_path' if '$backup_path' != 'null' else None,
+    'operation': sys.argv[1],
+    'action': sys.argv[2],
+    'path': sys.argv[3],
+    'source': sys.argv[4] if sys.argv[4] else None,
+    'existed_before': sys.argv[5] == 'true',
+    'force': sys.argv[6] == 'true',
+    'dry_run': sys.argv[7] == 'true',
+    'sha256_before': sys.argv[8] if sys.argv[8] != 'null' else None,
+    'sha256_after': sys.argv[9] if sys.argv[9] != 'null' else None,
+    'backup_path': sys.argv[10] if sys.argv[10] != 'null' else None,
 }
 print(json.dumps(entry))
-" >> "$DOGSQUARD_LEDGER_FILE"
+" "$operation" "$action" "$path" "$source" "$existed_before" "$FORCE" "$DRY_RUN" \
+  "$sha256_before" "$sha256_after" "$backup_path" >> "$DOGSQUARD_LEDGER_FILE"
+}
+
+backup_file() {
+  local target_path="$1" relative_path="$2"
+  local timestamp
+  timestamp="$(date +%Y%m%d%H%M%S)"
+  local backup_dir="$TARGET_DIR/.dogsquard/backups/$timestamp"
+  local backup_dest="$backup_dir/$relative_path"
+  mkdir -p "$(dirname "$backup_dest")" || fail "failed to create backup directory for $relative_path"
+  cp "$target_path" "$backup_dest" || fail "failed to backup $relative_path"
+  echo "$backup_dest"
 }
 
 [[ -n "$PROJECT_TYPE" ]] || { usage; fail "PROJECT_TYPE is required."; }
@@ -188,11 +200,19 @@ copy_file() {
     plan "copy file: $src -> $dest"
     ledger_entry "copy_file" "planned" "$dest" "$src"
   else
+    local sha256_before="null" backup_dest="null" existed_before="false"
+    if [[ -e "$TARGET_DIR/$dest" && "$FORCE" == "true" ]]; then
+      sha256_before="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
+      backup_dest="$(backup_file "$TARGET_DIR/$dest" "$dest")"
+      existed_before="true"
+      echo "BACKUP: $dest -> $backup_dest"
+    fi
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     cp "$ROOT_DIR/$src" "$TARGET_DIR/$dest"
-    local sha256_after
+    local sha256_after action
     sha256_after="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
-    ledger_entry "copy_file" "created" "$dest" "$src" "false" "null" "$sha256_after"
+    action="$([ "$existed_before" = "true" ] && echo "overwritten" || echo "created")"
+    ledger_entry "copy_file" "$action" "$dest" "$src" "$existed_before" "$sha256_before" "$sha256_after" "$backup_dest"
   fi
 }
 
@@ -212,6 +232,12 @@ copy_dir() {
     plan "copy directory: $src -> $dest"
     ledger_entry "copy_dir" "planned" "$dest" "$src"
   else
+    local backup_dest="null" existed_before="false"
+    if [[ -e "$TARGET_DIR/$dest" && "$FORCE" == "true" ]]; then
+      backup_dest="$(backup_file "$TARGET_DIR/$dest" "$dest")"
+      existed_before="true"
+      echo "BACKUP: $dest -> $backup_dest"
+    fi
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     rm -rf "$TARGET_DIR/$dest"
     mkdir -p "$TARGET_DIR/$dest"
@@ -226,7 +252,9 @@ copy_dir() {
       --exclude='*.local' \
       -C "$ROOT_DIR/$src" \
       -cf - . | tar -C "$TARGET_DIR/$dest" -xf -
-    ledger_entry "copy_dir" "created" "$dest" "$src"
+    local action
+    action="$([ "$existed_before" = "true" ] && echo "overwritten" || echo "created")"
+    ledger_entry "copy_dir" "$action" "$dest" "$src" "$existed_before" "null" "null" "$backup_dest"
   fi
 }
 
@@ -247,11 +275,19 @@ write_file() {
     plan "write file: $dest"
     ledger_entry "write_file" "planned" "$dest"
   else
+    local sha256_before="null" backup_dest="null" existed_before="false"
+    if [[ -e "$TARGET_DIR/$dest" && "$FORCE" == "true" ]]; then
+      sha256_before="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
+      backup_dest="$(backup_file "$TARGET_DIR/$dest" "$dest")"
+      existed_before="true"
+      echo "BACKUP: $dest -> $backup_dest"
+    fi
     mkdir -p "$(dirname "$TARGET_DIR/$dest")"
     cp "$tmp" "$TARGET_DIR/$dest"
-    local sha256_after
+    local sha256_after action
     sha256_after="$(sha256sum "$TARGET_DIR/$dest" | awk '{print $1}')"
-    ledger_entry "write_file" "created" "$dest" "" "false" "null" "$sha256_after"
+    action="$([ "$existed_before" = "true" ] && echo "overwritten" || echo "created")"
+    ledger_entry "write_file" "$action" "$dest" "" "$existed_before" "$sha256_before" "$sha256_after" "$backup_dest"
   fi
   rm -f "$tmp"
 }

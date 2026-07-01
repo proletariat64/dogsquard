@@ -648,7 +648,11 @@ def ensure_status_line(comment: str, verdict: str) -> str:
     if first.startswith(recognized):
         lines[0] = desired
         return "\n".join(lines).strip() + "\n"
-    return f"{desired}\n\n{comment.strip()}\n"
+    cleaned = "\n".join(
+        line for line in lines
+        if not line.strip().startswith(recognized)
+    )
+    return f"{desired}\n\n{cleaned.strip()}\n"
 
 
 def set_engine_details(comment: str, engine: str, model: str) -> str:

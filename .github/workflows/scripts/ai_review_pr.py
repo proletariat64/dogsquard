@@ -263,7 +263,7 @@ def should_skip_review(files: list[str]) -> bool:
 
 def skip_comment(engine: str, files: list[str]) -> str:
     changed = "\n".join(f"- `{path}`" for path in files)
-    return f"""PASS — Dogsquard AI Code Review
+    return f"""### PASS — Dogsquard AI Code Review
 
 ## 🤖 Dogsquard AI Code Review
 
@@ -304,7 +304,7 @@ SKIP
 
 def failure_comment(reason: str, engine: str = "unknown") -> str:
     safe_reason = redact_known_secrets(reason).strip() or "Unknown failure."
-    return f"""FAIL — Dogsquard AI Code Review
+    return f"""### FAIL — Dogsquard AI Code Review
 
 ## 🤖 Dogsquard AI Code Review
 
@@ -536,10 +536,16 @@ def pass_fail_for_verdict(verdict: str) -> str:
 
 
 def ensure_status_line(comment: str, verdict: str) -> str:
-    desired = f"{pass_fail_for_verdict(verdict)} — Dogsquard AI Code Review"
+    desired = f"### {pass_fail_for_verdict(verdict)} — Dogsquard AI Code Review"
     lines = comment.strip().splitlines()
     first = lines[0].strip() if lines else ""
-    if first.startswith("PASS — Dogsquard AI Code Review") or first.startswith("FAIL — Dogsquard AI Code Review"):
+    recognized = (
+        "PASS — Dogsquard AI Code Review",
+        "FAIL — Dogsquard AI Code Review",
+        "### PASS — Dogsquard AI Code Review",
+        "### FAIL — Dogsquard AI Code Review",
+    )
+    if first.startswith(recognized):
         lines[0] = desired
         return "\n".join(lines).strip() + "\n"
     return f"{desired}\n\n{comment.strip()}\n"

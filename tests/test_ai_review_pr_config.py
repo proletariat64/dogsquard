@@ -196,6 +196,20 @@ PASS
         self.assertEqual(run_capture.call_count, 1)
         self.assertEqual(run_capture.call_args.args[0][2], "BrokenModel")
 
+    def test_run_qoder_passes_prompt_via_stdin_not_cli_arg(self):
+        settings = {"qoder": {"models": ["TestModel"], "implicit_auto_fallback": True}}
+        large_prompt = "x" * 10000
+
+        with patch.dict(os.environ, {"QODER_PERSONAL_ACCESS_TOKEN": "token"}, clear=True):
+            with patch.object(self.module, "load_qoder_settings", return_value={}):
+                with patch.object(self.module, "qoder_settings_timeout", return_value=5):
+                    with patch.object(self.module, "run_capture", return_value=(0, self.valid_review_output(), "")) as run_capture:
+                        self.module.run_qoder(large_prompt, settings)
+
+        cmd = run_capture.call_args.args[0]
+        self.assertNotIn(large_prompt, cmd)
+        self.assertEqual(run_capture.call_args.kwargs.get("input_text"), large_prompt)
+
     def test_disabled_comment_is_not_file_skip(self):
         comment = self.module.disabled_comment("qoder")
 

@@ -101,6 +101,8 @@ fake-check-test:
 
 ai-review-test:
 	@python3 -m unittest discover -s tests -p 'test_*.py'
+	@python3 -m py_compile scripts/configure_ai_ci.py
+	@python3 -m py_compile scripts/install.py
 	@bash -n scripts/configure-ai-ci.sh scripts/upsert-pr-comment.sh scripts/test-configure-ai-ci.sh scripts/test-upsert-pr-comment.sh
 	@./scripts/test-configure-ai-ci.sh
 	@./scripts/test-upsert-pr-comment.sh

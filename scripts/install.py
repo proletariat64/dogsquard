@@ -189,7 +189,7 @@ def select_qoder_models_interactively(s: "InstallState") -> None:
         elif len(s.qoder_models) >= 2:
             log("No Qoder model slots left. Uncheck one first.")
         else:
-            s.qoder_models.append(model)
+            s.qoder_models.insert(0, model)
 
 def _resolve_backup(target: Path, backup: str) -> Path:
     return Path(backup) if os.path.isabs(backup) else target / backup.lstrip("./")
@@ -698,12 +698,20 @@ def commit_and_push(s: InstallState) -> None:
     c, _, _ = run_capture(["git", "diff", "--cached", "--quiet"], cwd=target)
     if c == 0:
         log("No target changes to commit."); return
-    run_capture(["git", "commit", "-m", "Install Dogsquard modules"], cwd=target)
+    c, _, _ = run_capture(["git", "commit", "-m", "Install Dogsquard modules"], cwd=target)
+    if c != 0:
+        fail("git commit failed")
     c, _, _ = run_capture(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], cwd=target)
     if c == 0:
-        run_capture(["git", "push"], cwd=target); log("Pushed to existing upstream.")
+        code, _, err = run_capture(["git", "push"], cwd=target)
+        if code != 0:
+            fail(f"git push failed: {err.strip()}")
+        log("Pushed to existing upstream.")
     else:
-        run_capture(["git", "push", "-u", "origin", "HEAD"], cwd=target); log("Pushed and set upstream for current branch.")
+        code, _, err = run_capture(["git", "push", "-u", "origin", "HEAD"], cwd=target)
+        if code != 0:
+            fail(f"git push failed: {err.strip()}")
+        log("Pushed and set upstream for current branch.")
 
 # Uninstall
 

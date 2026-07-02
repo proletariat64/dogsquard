@@ -90,7 +90,6 @@ Behavior:
   - Uninstall is all-or-nothing; no module selection.
   - Uninstall without manifest fails safely."""
 
-
 # Exception and helpers
 
 class InstallFailure(Exception):
@@ -116,17 +115,17 @@ def validate_bool(name: str, value: str) -> None:
 def file_sha256(path: Path) -> str | None:
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
 
-def run_capture(cmd: list[str] | str, *, input_text: str | None = None,
+def run_capture(cmd: list[str], *, input_text: str | None = None,
                  timeout_seconds: int | None = None, env: dict[str, str] | None = None,
                  cwd: Path | None = None) -> tuple[int, str, str]:
     try:
         p = subprocess.run(cmd, input=input_text, capture_output=True, text=True,
-                           timeout=timeout_seconds, env=env, cwd=cwd, shell=isinstance(cmd, str))
+                           timeout=timeout_seconds, env=env, cwd=cwd)
         return p.returncode, p.stdout, p.stderr
     except subprocess.TimeoutExpired:
         return 1, "", "command timed out"
     except FileNotFoundError:
-        return 1, "", f"command not found: {cmd[0] if isinstance(cmd, list) else cmd}"
+        return 1, "", f"command not found: {cmd[0]}"
 
 def _read_input(prompt: str) -> str:
     try:
@@ -156,61 +155,41 @@ def expand_user_path(path_str: str) -> str:
         return home if path_str == "~" else os.path.join(home, path_str[2:])
     return path_str
 
-
 def list_qoder_models() -> list[str]:
-    result = subprocess.run(
-        ["qodercli", "--list-models"],
-        capture_output=True, text=True,
-    )
+    result = subprocess.run(["qodercli", "--list-models"], capture_output=True, text=True)
     if result.returncode != 0:
         fail("qodercli --list-models failed; qodercli is required to list Qoder models.")
-    models = []
-    for line in result.stdout.splitlines():
-        stripped = line.strip()
-        if not stripped:
-            continue
-        if stripped.upper() == "MODEL":
-            continue
-        if stripped.lower() == "auto":
-            continue
-        models.append(stripped)
+    models = [l.strip() for l in result.stdout.splitlines()
+              if l.strip() and l.strip().upper() != "MODEL" and l.strip().lower() != "auto"]
     if not models:
         fail("qodercli --list-models returned no selectable models.")
     return models
-
 
 def select_qoder_models_interactively(s: "InstallState") -> None:
     available = list_qoder_models()
     s.qoder_models = []
     while True:
-        slots_left = 2 - len(s.qoder_models)
-        log(f"\nAvailable Qoder models ({slots_left} available model slots left):")
+        log(f"\nAvailable Qoder models ({2 - len(s.qoder_models)} slots left):")
         for i, model in enumerate(available):
-            mark = "x" if model in s.qoder_models else " "
-            log(f"  {i + 1:2d}) [{mark}] {model}")
-        log("Enter a number to toggle a model. Press Enter or type done to continue.")
+            log(f"  {i + 1:2d}) [{'x' if model in s.qoder_models else ' '}] {model}")
+        log("Enter a number to toggle. Press Enter or type done to continue.")
         answer = _read_input("Qoder model selection: ").strip()
         if not answer or answer.lower() == "done":
             if len(s.qoder_models) < 1:
-                log("Select at least one Qoder model before continuing.")
-                continue
+                log("Select at least one Qoder model before continuing."); continue
             break
         if not answer.isdigit():
-            log("Enter a model number, press Enter, or type done.")
-            continue
+            log("Enter a model number, press Enter, or type done."); continue
         num = int(answer)
         if num < 1 or num > len(available):
-            log("Model number out of range.")
-            continue
+            log("Model number out of range."); continue
         model = available[num - 1]
         if model in s.qoder_models:
             s.qoder_models.remove(model)
+        elif len(s.qoder_models) >= 2:
+            log("No Qoder model slots left. Uncheck one first.")
         else:
-            if len(s.qoder_models) >= 2:
-                log("No Qoder model slots left. Uncheck one model before selecting another.")
-                continue
             s.qoder_models.append(model)
-
 
 def _resolve_backup(target: Path, backup: str) -> Path:
     return Path(backup) if os.path.isabs(backup) else target / backup.lstrip("./")
@@ -226,7 +205,6 @@ def print_ai_secret_names(engine: str) -> None:
         log("\nRequired secret: QODER_PERSONAL_ACCESS_TOKEN")
     else:
         log("\nRequired secrets by engine:\n  claude-deepseek: DEEPSEEK_AUTH_TOKEN\n  qoder:           QODER_PERSONAL_ACCESS_TOKEN")
-
 
 # Config file parser
 
@@ -252,7 +230,6 @@ def parse_config_file(file_path: Path) -> dict[str, str]:
             bad_arg(f"config value at line {ln} looks like a secret. Config files must not contain secret values.")
         config[key] = value
     return config
-
 
 # State
 
@@ -287,7 +264,6 @@ class InstallState:
         self.qoder_models_from_cli: list[str] = []
         self.ledger_file: Path | None = None
         self.validation_succeeded = False
-
 
 # CLI parser
 
@@ -324,7 +300,6 @@ def parse_cli_flags(s: InstallState, args: list[str]) -> None:
             bad_arg(f"unknown argument: {a}")
         i += 1
 
-
 # Merge config + CLI (CLI wins)
 
 def merge_config(s: InstallState) -> None:
@@ -353,7 +328,6 @@ def merge_config(s: InstallState) -> None:
         s.force = c["FORCE"] == "true"
     if "UNINSTALL" in c and not s.cli_uninstall and c["UNINSTALL"] == "true":
         s.uninstall = True; s.mode_install = False
-
 
 # Input validation
 
@@ -412,7 +386,6 @@ def validate_inputs(s: InstallState) -> None:
         if not Path(s.target_dir).is_dir():
             bad_arg(f"target directory does not exist: {s.target_dir}")
 
-
 # Ledger
 
 def ledger_entry(s: InstallState, operation: str, action: str, path: str, *,
@@ -431,7 +404,6 @@ def ledger_entry(s: InstallState, operation: str, action: str, path: str, *,
     }
     with s.ledger_file.open("a") as f:
         f.write(json.dumps(entry) + "\n")
-
 
 # Plan builder
 
@@ -471,7 +443,6 @@ def build_plan(s: InstallState) -> None:
     if not s.apply:
         log("\nDry-run complete. Use --apply to write files.")
 
-
 # Backup
 
 def backup_file(s: InstallState, target_path: Path, relative: str) -> str:
@@ -479,7 +450,6 @@ def backup_file(s: InstallState, target_path: Path, relative: str) -> str:
     bk.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(str(target_path), str(bk))
     return str(bk)
-
 
 # Apply: bootstrap modules
 
@@ -501,7 +471,6 @@ def apply_bootstrap_modules(s: InstallState) -> None:
             log(t.rstrip())
     if code != 0:
         fail(f"bootstrap-project.sh exited with code {code}")
-
 
 # Apply: AI PR review module
 
@@ -599,7 +568,6 @@ def apply_ai_pr_review(s: InstallState) -> None:
             log(f"PLAN: write disabled safe settings.json\nNEXT: cd {s.target_dir} && scripts/configure-ai-ci.sh")
     print_ai_secret_names(s.ai_engine)
 
-
 # Manifest writer
 
 def write_manifest(s: InstallState) -> None:
@@ -638,7 +606,6 @@ def write_manifest(s: InstallState) -> None:
     tmp.write_text(json.dumps(manifest, indent=2) + "\n")
     os.replace(str(tmp), str(mp))
     log(f"\nManifest written: {mp}")
-
 
 # Validation
 
@@ -693,7 +660,6 @@ def run_validation(s: InstallState) -> bool:
     s.validation_succeeded = not f
     return not f
 
-
 # Commit/push
 
 def commit_and_push(s: InstallState) -> None:
@@ -738,7 +704,6 @@ def commit_and_push(s: InstallState) -> None:
         run_capture(["git", "push"], cwd=target); log("Pushed to existing upstream.")
     else:
         run_capture(["git", "push", "-u", "origin", "HEAD"], cwd=target); log("Pushed and set upstream for current branch.")
-
 
 # Uninstall
 
@@ -832,7 +797,6 @@ def run_uninstall(s: InstallState) -> None:
     log("Executing uninstall...")
     _execute_uninstall(manifest, target)
 
-
 # Interactive menu
 
 def interactive_menu(s: InstallState) -> None:
@@ -886,7 +850,6 @@ def interactive_menu(s: InstallState) -> None:
     s.commit_push = prompt_yes_no("Commit and push after validation?", "no")
     log("")
     s.apply = prompt_yes_no("Apply changes to target?", "no")
-
 
 # Main entry point
 

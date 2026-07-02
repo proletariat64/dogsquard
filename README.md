@@ -21,8 +21,10 @@ The intended working model is:
 
 - documentation governance structure and checks
 - Makefile command center
+- guided install and uninstall shell for target repositories
 - GitHub issue and PR templates
 - PR Quality Gate workflow
+- optional unified AI PR Review workflow
 - approval-gated AI bug-fix draft PR workflow
 - example Go backend and TypeScript frontend
 - API smoke and Playwright smoke tests
@@ -63,30 +65,145 @@ make package-release
 
 Dogsquard assumes the user manually creates a new GitHub repository first.
 
-Canonical profile-aware flow:
+Recommended install flow:
 
 ```bash
 git clone <new-repo-url>
 cd dogsquard
-PROJECT_TYPE=node TARGET_DIR=../new-repo scripts/bootstrap-project.sh
-PROJECT_TYPE=node TARGET_DIR=../new-repo DRY_RUN=false scripts/bootstrap-project.sh
+./install --repo ../new-repo --project-type node --modules governance,pr-quality
+./install --repo ../new-repo --project-type node --modules governance,pr-quality --apply
 ```
 
-Optional example app:
+Dry-run is the default. Use `--apply` only after reviewing the printed plan.
+
+Interactive flow:
 
 ```bash
-PROJECT_TYPE=go-js TARGET_DIR=../new-repo DRY_RUN=false INCLUDE_EXAMPLE_APP=true scripts/bootstrap-project.sh
+./install --menu
 ```
 
-Optional production profile scaffold:
+Common module choices:
 
 ```bash
-PROJECT_TYPE=node TARGET_DIR=../new-repo DRY_RUN=false INCLUDE_PRODUCTION_PROFILE=true scripts/bootstrap-project.sh
+# Docs/governance-only repository
+./install --repo ../new-repo --project-type docs-only --modules governance,pr-quality --apply
+
+# Go backend + TypeScript frontend example app
+./install --repo ../new-repo --project-type go-js --modules governance,pr-quality,example-app --apply
+
+# Add production planning scaffold
+./install --repo ../new-repo --project-type node --modules governance,pr-quality,production-profile --apply
 ```
 
-`scripts/init-new-repo.sh` remains a conservative legacy compatibility flow. Use `scripts/bootstrap-project.sh` by default because it supports `PROJECT_TYPE=node`, `PROJECT_TYPE=go-js`, and `PROJECT_TYPE=docs-only`, and it is covered by `make bootstrap-test`.
+Available modules:
 
-Review generated files before committing in the target repo.
+- `governance`
+- `pr-quality`
+- `dev-deploy`
+- `example-app`
+- `production-profile`
+- `ai-pr-review`
+
+Use `--force` only when you intentionally want Dogsquard to overwrite target files. Overwritten files are backed up under `.dogsquard/backups/`, and apply mode writes `.dogsquard/install-manifest.json` for uninstall.
+
+Install can validate and activate target repo changes:
+
+```bash
+./install --repo ../new-repo --project-type node --modules governance,pr-quality \
+  --apply --run-checks --commit-push
+```
+
+`scripts/init-new-repo.sh` remains a conservative legacy compatibility flow. `scripts/bootstrap-project.sh` remains the lower-level profile bootstrap helper. Use `./install` by default because it supports module selection, AI PR Review installation, manifest writing, and uninstall.
+
+Review generated files before committing in the target repo unless `--commit-push` is explicitly selected.
+
+## AI CI Setup
+
+Install unified AI PR Review into a target repository:
+
+```bash
+./install --repo ../target-repo --project-type docs-only --modules ai-pr-review --apply
+```
+
+Without AI config flags, this installs the workflow and a disabled safe config. Configure later inside the target repo:
+
+```bash
+cd ../target-repo
+scripts/configure-ai-ci.sh
+```
+
+Configure Qoder non-interactively during install:
+
+```bash
+./install --repo ../target-repo --project-type docs-only --modules ai-pr-review \
+  --ai-enabled true \
+  --ai-engine qoder \
+  --qoder-model Qwen3.7-Max \
+  --apply
+```
+
+Configure Qoder with two preferred models:
+
+```bash
+./install --repo ../target-repo --project-type docs-only --modules ai-pr-review \
+  --ai-enabled true \
+  --ai-engine qoder \
+  --qoder-model GLM-5.2 \
+  --qoder-model Qwen3.7-Max \
+  --apply
+```
+
+The runner appends implicit `Auto`; do not pass `Auto` as a model.
+
+Configure Claude+DeepSeek:
+
+```bash
+./install --repo ../target-repo --project-type docs-only --modules ai-pr-review \
+  --ai-enabled true \
+  --ai-engine claude-deepseek \
+  --apply
+```
+
+Required GitHub secrets are set in the target repository, never stored in Dogsquard config files:
+
+```bash
+cd ../target-repo
+gh secret set QODER_PERSONAL_ACCESS_TOKEN
+gh secret set DEEPSEEK_AUTH_TOKEN
+```
+
+For optional non-secret GitHub repository variables:
+
+```bash
+./install --repo ../target-repo --project-type docs-only --modules ai-pr-review \
+  --ai-enabled true \
+  --ai-engine qoder \
+  --qoder-model Qwen3.7-Max \
+  --ai-apply-github-vars \
+  --apply
+```
+
+The canonical source of truth after setup is `.github/ai-review/settings.json`. GitHub variables are compatibility hints; they are not the enabled/disabled switch.
+
+## Uninstall
+
+Uninstall removes Dogsquard-managed assets recorded in the target repo manifest:
+
+```bash
+./install --uninstall --repo ../target-repo
+./install --uninstall --repo ../target-repo --apply
+```
+
+Uninstall is all-or-nothing and has no module picker. It requires `.dogsquard/install-manifest.json`, refuses to guess when the manifest is missing, and does not remove target business code or pre-existing files.
+
+Uninstall does not delete GitHub secrets or variables. If AI PR Review is no longer used, clean them up manually in the target repo:
+
+```bash
+gh secret delete QODER_PERSONAL_ACCESS_TOKEN
+gh secret delete DEEPSEEK_AUTH_TOKEN
+gh variable delete AI_REVIEW_ENGINE
+gh variable delete AI_REVIEW_CONFIGURED
+```
 
 ## GitHub Setup Overview
 

@@ -6,7 +6,7 @@
   },
   "qoder": {
     "models": [
-      "Qwen3.7-Max"
+      "Qwen3.8-Max"
     ],
     "implicit_auto_fallback": true
   }

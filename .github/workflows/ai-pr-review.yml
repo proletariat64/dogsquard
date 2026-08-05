@@ -40,7 +40,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ANTHROPIC_AUTH_TOKEN: ${{ secrets.DEEPSEEK_AUTH_TOKEN }}
       QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
-      QODERCLI_VERSION: "1.0.34"
+      QODERCLI_VERSION: "1.1.14"
       QODERCLI_CACHE_DIR: .github/.cache/qodercli
 
     steps:
